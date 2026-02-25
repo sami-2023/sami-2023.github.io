@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sami - Login</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#26ff00">
+  <link rel="icon" type="image/x-icon" href="icons/favicon.ico">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f0f8ff; display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
+    .auth-card { background: white; width: 100%; max-width: 400px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+    .logo-circle img{ width: 70px; height: 70px; background: linear-gradient(90deg, #ff0a00, #26ff00); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: white; font-size: 32px; font-weight: bold; }
+    h2 { color: #333; margin-bottom: 25px; }
+    .input-group { position: relative; margin-bottom: 15px; }
+    .input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #999; }
+    .input-group input { width: 100%; padding: 12px 15px 12px 45px; border: 1px solid #ddd; border-radius: 10px; outline: none; font-size: 16px; }
+    .btn-login { width: 100%; padding: 12px; background: linear-gradient(90deg, #ff0a00, #26ff00); border: none; border-radius: 10px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+    .btn-login:disabled { opacity: 0.7; cursor: not-allowed; }
+    .footer-link { margin-top: 20px; font-size: 13px; color: #777; }
+    .footer-link a { color: #26ff00; text-decoration: none; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div class="auth-card">
+  <div class="logo-circle"><img src="images\whiteSlogo.png" alt="logo"></div>
+  <h2>Welcome Back</h2>
+
+  <div class="input-group">
+    <i class="fa-solid fa-envelope"></i>
+    <input type="email" id="loginEmail" placeholder="Email Address">
+  </div>
+
+  <div class="input-group">
+    <i class="fa-solid fa-lock"></i>
+    <input type="password" id="loginPassword" placeholder="Password">
+  </div>
+
+  <button type="button" class="btn-login" id="loginBtn" onclick="handleLogin()">LOG IN</button>
+
+  <div class="footer-link">
+    Don't have an account? <a href="signup.html">Sign Up</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+
+<script>
+  // 2. Initialize Appwrite (Must match your signup page keys)
+  const sdk = new Appwrite.Client();
+  sdk
+    .setEndpoint('https://fra.cloud.appwrite.io/v1') 
+    .setProject('69930a880011dec1e960'); // <--- Replace with your Project ID
+
+  const account = new Appwrite.Account(sdk);
+
+  async function handleLogin() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const btn = document.getElementById('loginBtn');
+
+    if (!email || !password) {
+      alert("Please enter both email and password.");
+      return;
+    }
+
+    btn.innerText = "Processing...";
+    btn.disabled = true;
+
+    try {
+      // 3. Appwrite Session Creation (Login)
+      // This creates a session that stays active in the browser
+      await account.createEmailSession(email, password);
+
+      alert("Logged in successfully!");
+      // Send them to the main page
+      window.location.href = "index.html"; 
+      
+    } catch (error) {
+      // Appwrite errors are very specific (e.g., "Invalid credentials")
+      alert("Login Error: " + error.message);
+      btn.innerText = "LOG IN";
+      btn.disabled = false;
+    }
+  }
+</script>
+</body>
+</html>

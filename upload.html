@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sami - Upload</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#26ff00">
+  <link rel="icon" type="image/x-icon" href="icons/favicon.ico">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body { 
+      font-family: Arial, sans-serif; 
+      background: #f0f8ff; 
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* === HEADER === */
+    .header {
+      background: linear-gradient(90deg, #ff0a00, #26ff00);
+      color: white;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .logo img { width: 45px; height: 45px; background: white; border-radius: 50%; object-fit: cover; }
+    .title-box { flex-grow: 1; text-align: center; }
+    .site-name { font-size: 22px; font-weight: bold; }
+
+    /* === POINTS BAR === */
+    .points-bar { 
+      background: white; 
+      padding: 12px 20px; 
+      display: flex; 
+      align-items: center; 
+      margin: 10px auto;
+      width: 92%;
+      max-width: 500px;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      font-weight: bold;
+    }
+    #currentPoints { color: #ff0a00; font-size: 14px; white-space: nowrap; }
+    .progress-container { flex-grow: 1; height: 12px; background: #e9ecef; border-radius: 6px; margin: 0 15px; overflow: hidden; position: relative; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #26ff00, #ff0a00); width: 0%; border-radius: 6px; transition: width 0.5s; }
+
+    /* === UPLOAD CONTENT === */
+    .upload-area {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      overflow-y: auto;
+      padding-bottom: 140px; 
+    }
+
+    .preview-box {
+      width: 100%;
+      max-width: 400px;
+      aspect-ratio: 1 / 1;
+      background: #ddd;
+      border: 2px dashed #ccc;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .preview-box i { font-size: 50px; color: #555; }
+    .preview-box video, .preview-box img { width: 100%; height: 100%; object-fit: contain; }
+
+    .caption-input {
+      width: 100%;
+      max-width: 400px;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-family: inherit;
+    }
+
+    .upload-btn {
+      background: #ff0a00;
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      border-radius: 30px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    /* === LOADING OVERLAY (FIXED: Added this) === */
+    #loadingOverlay {
+      position: fixed; top:0; left:0; width:100%; height:100%;
+      background: rgba(255,255,255,0.9);
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 5000;
+    }
+
+    /* === MODALS === */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center;
+      z-index: 2000;
+    }
+    .modal-card { background: white; width: 85%; max-width: 350px; border-radius: 20px; text-align: center; overflow: hidden; }
+    .modal-head { background: linear-gradient(90deg, #ff0a00, #26ff00); padding: 20px; color: white; font-size: 30px; }
+    .modal-body { padding: 20px; }
+    .modal-footer { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 10px; }
+    
+    .btn-watch { background: #26ff00; color: black; border: none; padding: 12px; border-radius: 25px; font-weight: bold; cursor: pointer; }
+    .btn-skip { background: #f0f0f0; color: #666; border: none; padding: 10px; border-radius: 25px; cursor: pointer; }
+
+    #adScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 3000; display: none; flex-direction: column; }
+    .ad-banner { position: fixed; bottom: 0; left: 0; width: 100%; height: 50px; background: white; z-index: 1000; border-top: 1px solid #ddd; display: flex; align-items: center; justify-content: center; }
+
+    .footer { position: fixed; bottom: 50px; left: 0; width: 100%; height: 70px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #ddd; z-index: 1000; }
+    .nav-item { text-decoration: none; color: #ff0a00; display: flex; flex-direction: column; align-items: center; font-size: 22px; }
+    .nav-item.active { color: #26ff00; }
+    .nav-item span { font-size: 10px; margin-top: 3px; }
+  </style>
+</head>
+<body>
+
+  <div id="loadingOverlay">
+      <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 40px; color: #ff0a00;"></i>
+      <p style="margin-top: 15px; font-weight: bold;">Uploading to Feed...</p>
+  </div>
+
+  <div class="header">
+    <div class="logo"><img src="images/s.png" alt="S"></div>
+    <div class="title-box"><h1 class="site-name">Sami</h1></div>
+    <div style="width:45px;"></div> 
+  </div>
+
+  <div class="points-bar">
+    <span id="currentPoints">0 Points</span>
+    <div class="progress-container"><div class="progress-fill" id="progressFill"></div></div>
+    <span style="color: #26ff00; font-size: 14px;">1000 Pts</span>
+  </div>
+
+  <div class="upload-area">
+    <div class="preview-box" id="previewBox" onclick="document.getElementById('fileInput').click()">
+      <i class="fa-solid fa-camera" id="placeholderIcon"></i>
+    </div>
+    <textarea id="postCaption" class="caption-input" placeholder="Write a description..." rows="3"></textarea>
+    <input type="file" id="fileInput" accept="image/*,video/*" style="display:none;" onchange="handleFile(event)">
+    <button class="upload-btn" onclick="showAdNotice()">Share to Feed</button>
+  </div>
+
+  <div id="uploadModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-head"><i class="fa-solid fa-gift"></i></div>
+      <div class="modal-body">
+        <h3>Support Sami?</h3>
+        <p style="color:#777; font-size: 14px; margin-top: 8px;">Watch a 15s ad to earn <b>+2 Points</b> bonus!</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-watch" onclick="startRewardAd()">WATCH AD & POST</button>
+        <button class="btn-skip" onclick="finalizeUpload(false)">Skip and post directly</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="adScreen">
+    <div style="padding:20px; color:white; font-weight:bold;">Ad Playing... <span id="timer">15</span>s</div>
+    <video id="rewardVid" src="https://www.w3schools.com/html/mov_bbb.mp4" style="width:100%; flex-grow:1;"></video>
+  </div>
+   <div class="ad-banner"><p style="font-size:10px; color:#999;">ADVERTISEMENT</p></div>
+
+
+  <div class="footer">
+    <a href="index.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+    <a href="upload.html" class="nav-item active"><i class="fa-solid fa-camera"></i><span>Post</span></a>
+   
+    <a href="wallet.html" class="nav-item"><i class="fa-solid fa-wallet"></i><span>Wallet</span></a>
+    <a href="profile.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Profile</span></a>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+
+<script>
+  // 2. CONFIGURATION
+  const sdk = new Appwrite.Client();
+  sdk
+    .setEndpoint('https://fra.cloud.appwrite.io/v1')
+    .setProject('69930a880011dec1e960'); // <--- Your Project ID
+
+  const account = new Appwrite.Account(sdk);
+  const databases = new Appwrite.Databases(sdk);
+
+  const DB_ID = '69930af300230e5efc4d';
+  const PROFILES_ID = 'profiles';
+  const POSTS_ID = 'posts';
+
+  let selectedFileBlob = null;
+  let fileType = "";
+
+  // Handle File Selection (No changes needed here)
+  function handleFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    selectedFileBlob = file;
+    fileType = file.type.startsWith('video') ? 'video' : 'image';
+    const previewBox = document.getElementById('previewBox');
+    const url = URL.createObjectURL(file);
+    previewBox.innerHTML = fileType === 'video' 
+      ? `<video src="${url}" autoplay muted loop style="width:100%; height:100%; object-fit:contain;"></video>` 
+      : `<img src="${url}" style="width:100%; height:100%; object-fit:contain;">`;
+  }
+
+  function showAdNotice() {
+    if (!selectedFileBlob) return alert("Please select a photo or video first!");
+    document.getElementById('uploadModal').style.display = 'flex';
+  }
+
+  function startRewardAd() {
+    document.getElementById('uploadModal').style.display = 'none';
+    const screen = document.getElementById('adScreen');
+    const vid = document.getElementById('rewardVid');
+    screen.style.display = 'flex';
+    vid.play();
+
+    let count = 15;
+    const interval = setInterval(() => {
+      count--;
+      document.getElementById('timer').textContent = count;
+      if (count <= 0) {
+        clearInterval(interval);
+        vid.pause();
+        screen.style.display = 'none';
+        finalizeUpload(true); 
+      }
+    }, 1000);
+  }
+
+  // 3. UPDATED FINAL UPLOAD LOGIC
+  async function finalizeUpload(isBonus = false) {
+    document.getElementById('uploadModal').style.display = 'none';
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    
+    try {
+      // Check Auth
+      const user = await account.get();
+      if (!user) throw new Error("Please log in first!");
+
+      // A. Upload to Cloudinary (Kept as is)
+      const cloudName = "daymsdzqu"; 
+      const uploadPreset = "sami_preset";
+      const formData = new FormData();
+      formData.append("file", selectedFileBlob);
+      formData.append("upload_preset", uploadPreset);
+
+      const cloudResp = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+        method: "POST",
+        body: formData
+      });
+      
+      if (!cloudResp.ok) throw new Error("Cloudinary upload failed.");
+      const cloudData = await cloudResp.json();
+      const mediaUrl = cloudData.secure_url;
+
+      // B. Get User Profile
+      const profile = await databases.getDocument(DB_ID, PROFILES_ID, user.$id);
+
+      // C. SAVE POST TO APPWRITE
+      await databases.createDocument(DB_ID, POSTS_ID, 'unique()', {
+        user_id: user.$id,
+        username: profile.username,
+        pfp: profile.pfp,
+        url: mediaUrl,
+        type: fileType,
+        caption: document.getElementById('postCaption').value || "",
+        likes: 0
+      });
+
+      // D. Reward Points (Update Appwrite Document)
+      if (isBonus) {
+        const newPoints = (profile.points || 0) + 2;
+        await databases.updateDocument(DB_ID, PROFILES_ID, user.$id, {
+          points: newPoints
+        });
+      }
+
+      window.location.href = "index.html";
+
+    } catch (e) {
+      console.error(e);
+      alert("Error: " + e.message);
+      document.getElementById('loadingOverlay').style.display = 'none';
+    }
+  }
+
+  // 4. Initial Points Load
+  window.onload = async function() {
+    try {
+      const user = await account.get();
+      const profile = await databases.getDocument(DB_ID, PROFILES_ID, user.$id);
+      if(profile) {
+        const pts = profile.points || 0;
+        document.getElementById("currentPoints").textContent = pts + " Points";
+        document.getElementById("progressFill").style.width = Math.min((pts / 1000) * 100, 100) + "%";
+      }
+    } catch (e) { console.log("User not logged in"); }
+  };
+</script>
+</body>
+</html>

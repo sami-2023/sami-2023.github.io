@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sami - SignUp</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#26ff00">
+  <link rel="icon" type="image/x-icon" href="icons/favicon.ico">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f0f8ff; display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
+    
+    .auth-card { background: white; width: 100%; max-width: 400px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+    
+    .logo-circle img{ width: 70px; height: 70px; background: linear-gradient(90deg, #ff0a00, #26ff00); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: white; font-size: 32px; font-weight: bold; }
+    
+    h2 { color: #333; margin-bottom: 10px; }
+    p { color: #777; font-size: 14px; margin-bottom: 25px; }
+
+    .input-group { position: relative; margin-bottom: 15px; }
+    .input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #999; }
+    .input-group input { width: 100%; padding: 12px 15px 12px 45px; border: 1px solid #ddd; border-radius: 10px; outline: none; transition: 0.3s; font-size: 16px; }
+    .input-group input:focus { border-color: #26ff00; }
+
+    .btn-signup { width: 100%; padding: 12px; background: linear-gradient(90deg, #ff0a00, #26ff00); border: none; border-radius: 10px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+    .btn-signup:active { transform: scale(0.98); }
+
+    .footer-link { margin-top: 20px; font-size: 13px; color: #777; }
+    .footer-link a { color: #ff0a00; text-decoration: none; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div class="auth-card">
+  <div class="logo-circle"><img src="images\whiteSlogo.png" alt="logo"></div>
+  <h2>Create Account</h2>
+  <p>Start posting and earning points today!</p>
+
+  <div class="input-group">
+    <i class="fa-solid fa-user"></i>
+    <input type="text" id="regUsername" placeholder="Username" required>
+  </div>
+
+  <div class="input-group">
+    <i class="fa-solid fa-envelope"></i>
+    <input type="email" id="regEmail" placeholder="Email Address" required>
+  </div>
+
+  <div class="input-group">
+    <i class="fa-solid fa-lock"></i>
+    <input type="password" id="regPassword" placeholder="Password (6+ chars)" required>
+  </div>
+
+  <button class="btn-signup" onclick="handleSignUp()">SIGN UP</button>
+
+  <div class="footer-link">
+    Already have an account? <a href="login.html">Log In</a>
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+
+<script>
+  // 1. Initialize Appwrite
+  const sdk = new Appwrite.Client();
+  sdk
+    .setEndpoint('https://fra.cloud.appwrite.io/v1') 
+    .setProject('69930a880011dec1e960'); 
+
+  const account = new Appwrite.Account(sdk);
+  const databases = new Appwrite.Databases(sdk);
+
+  const DB_ID = '69930af300230e5efc4d';
+  const PROFILES_ID = 'profiles';
+  const REFERRALS_ID = 'referrals'; // Make sure this matches your collection ID
+
+  // Capture referral code from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const referrerUsername = urlParams.get('ref');
+
+  // --- MERGED SIGN UP LOGIC ---
+  async function handleSignUp() {
+    const btn = document.querySelector('.btn-signup');
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+    const username = document.getElementById('regUsername').value.trim();
+
+    if(!email || !password || !username) {
+        alert("Please fill all fields");
+        return;
+    }
+
+    btn.innerText = "Creating Account...";
+    btn.disabled = true;
+
+    try {
+        // 1. Create the Auth Account
+        const userAccount = await account.create('unique()', email, password, username);
+
+        // 2. Log them in (REQUIRED to send verification)
+        // Using createEmailPasswordSession for 2026 SDK compatibility
+        await account.createEmailSession(email, password);
+
+        // 3. Send the Verification Email
+        // This will send the user to your verify.html page
+        await account.createVerification('https://sami-2023.github.io/verify.html');
+
+        // 4. Create the Profile Document
+        await databases.createDocument(DB_ID, PROFILES_ID, userAccount.$id, {
+            username: username,
+            points: 0,
+            referred_by: referrerUsername || "none",
+            hasClaimedBonus: false 
+        });
+
+        
+
+        // 5. Referral Logic (Keep your existing logic here)
+        if (referrerUsername && referrerUsername !== "none") {
+            try {
+                const referrerDoc = await databases.listDocuments(DB_ID, PROFILES_ID, [
+                    Appwrite.Query.equal('username', referrerUsername)
+                ]);
+
+                if (referrerDoc.documents.length > 0) {
+                    const refUser = referrerDoc.documents[0];
+                    await databases.createDocument(DB_ID, REFERRALS_ID, 'unique()', {
+                        referrer_id: refUser.$id,
+                        referred_user_id: userAccount.$id,
+                        status: 'pending',
+                        reward_amount: 100
+                    });
+                }
+            } catch (refErr) {
+                console.error("Referral record failed:", refErr);
+            }
+        }
+
+        // Change the alert to mention the email check
+        alert("Account Created! Please check your Gmail to verify your account and claim your ₦100 bonus.");
+        
+        // Redirect to index, but they won't see the bonus yet
+        window.location.href = "index.html?needsVerification=true";
+
+    } catch (err) {
+        alert("Error: " + err.message);
+        btn.innerText = "SIGN UP";
+        btn.disabled = false;
+    }
+}
+
+
+
+
+</script>
+</body>
+</html>

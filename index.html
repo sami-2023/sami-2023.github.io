@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+ <meta name="fd19383c457f8577427ec1e2c0502815b5fbbfe9" content="fd19383c457f8577427ec1e2c0502815b5fbbfe9" />
+  <title>Sami - Home</title>
+
+  <link rel="manifest" href="manifest.json">
+
+<meta name="theme-color" content="#26ff00">
+
+<link rel="icon" type="image/x-icon" href="icons/favicon.ico">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <style>
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f8ff;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* === HEADER === */
+    .header {
+      background: linear-gradient(90deg, #ff0a00, #26ff00);
+      color: white;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .logo img {
+       width: 45px;
+       height: 45px; 
+       background: white; 
+       color: #ff0a00; 
+       border-radius: 50%; 
+       display: flex; 
+       align-items: center; 
+       justify-content: center; 
+       font-size: 24px; 
+       font-weight: bold; 
+       flex-shrink: 0; 
+      }
+    .title-box { 
+      flex-grow: 1; 
+      text-align: center; 
+    }
+    .site-name { 
+      font-size: 22px; 
+      font-weight: bold;
+     }
+    .tagline { 
+      font-size: 11px; 
+      opacity: 0.9; 
+    }
+
+    /* === POINTS BAR === */
+    .points-bar {
+      background: white;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      margin: 10px auto;
+      width: 92%;
+      max-width: 500px;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      font-weight: bold;
+    }
+
+    #currentPoints { color: #ff0a00; font-size: 14px; white-space: nowrap; }
+
+    .progress-container {
+      flex-grow: 1;
+      height: 12px;
+      background: #e9ecef;
+      border-radius: 6px;
+      margin: 0 15px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #26ff00, #ff0a00);
+      width: 0%;
+      border-radius: 6px;
+      transition: width 0.6s ease;
+      position: relative;
+    }
+
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      animation: shine 2s infinite;
+    }
+
+    @keyframes shine {
+
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    .pts-target { color: #26ff00; font-size: 14px; white-space: nowrap; }
+
+    /* === FEED === */
+    .posts-grid {
+      flex-grow: 1;
+      overflow-y: auto;
+      scroll-snap-type: y mandatory;
+      padding-bottom: 140px !important;
+    }
+    .posts-grid::-webkit-scrollbar { display: none; }
+
+    .post {
+      height: calc(100vh - 250px);
+      scroll-snap-align: start;
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border-bottom: 1px solid #eee;
+      margin-bottom: 20px;
+    }
+
+    .post-image {
+      flex-grow: 1;
+      background: #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .responsive-media {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    .post-details { padding: 10px 15px; flex-shrink: 0; }
+    .post-user { font-weight: bold; color: #ff0a00; font-size: 15px; margin-bottom: 5px; }
+    .interaction-bar { display: flex; align-items: center; gap: 15px; }
+    .interaction-bar i { font-size: 24px; cursor: pointer; transition: transform 0.1s ease; }
+    .interaction-bar i:active { transform: scale(1.2); }
+
+    /* === ADS & BADGES === */
+    @keyframes earnedPop {
+      0% { transform: scale(0); opacity: 0; }
+      80% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .earned-badge-style {
+      display: block !important;
+      animation: earnedPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+
+    }
+    /* === FOOTER & AD BANNER === */
+    .ad-banner {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 50px;
+      background: white;
+      z-index: 1000;
+      border-top: 1px solid #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .footer {
+    position: fixed;
+    bottom: 50px; /* This pushes the menu above the 50px ad banner */
+    left: 0;
+    width: 100%;
+    height: 70px;
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-top: 1px solid #ddd;
+    z-index: 1000;
+}
+
+    .nav-item {
+
+      text-decoration: none;
+      color: #ff0a00;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 22px;
+      transition: all 0.3s ease;
+    }
+
+    .nav-item.active { color: #26ff00; transform: scale(1.1); }
+
+    .nav-item span { font-size: 10px; margin-top: 3px; font-weight: bold; color: inherit; }
+
+    span{
+
+      display: block;
+
+  line-height: 0.4; /* adjust this value */
+
+  /* or */
+  margin-bottom: -5px; /* adjust this value */
+  }
+ 
+    [id^="ad-provider-container-"] {
+        background: #1a1a1a;
+        width: 100%;
+        border-radius: 8px;
+        min-height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #555;
+        font-family: sans-serif;
+    }
+    .earned-badge-style {
+    width: 100%;
+    font-size: 12px;
+    border-top: 1px solid #26ff00;
+}
+  
+  </style>
+</head>
+
+<body>
+  <div class="header">
+
+    <div class="logo"><img src="images\s.png" alt="logo"></div>
+
+    <div class="title-box">
+
+      <h1 class="site-name">Sami</h1>
+
+      <p class="tagline">Post. Watch Ads. Earn!</p>
+    </div>
+    <div style="position: absolute; top: 20px; right: 20px; font-size: 24px; cursor: pointer; z-index: 101;">
+         <div class="menu-trigger" style="cursor:pointer; font-size: 24px; padding: 5px; display: flex; flex-direction: column; gap: 4px;" onclick="toggleSettingsMenu()">
+    <div style="width: 25px; height: 3px; background: white; border-radius: 2px;"></div>
+    <div style="width: 25px; height: 3px; background: white; border-radius: 2px;"></div>
+    <div style="width: 25px; height: 3px; background: white; border-radius: 2px;"></div>
+         </div>
+    </div>
+    <div id="settingsMenu" style="display: none; position: absolute; top: 55px; right: 20px; background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; padding: 10px; min-width: 180px;">
+      <button onclick="location.href='about.html'" style="width: 100%; text-align: left; padding: 12px; background: none; border: none; cursor: pointer; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; font-size: 14px;">
+        <i class="fa-solid fa-briefcase" style="color: #ff0a00;"></i>
+        <span style="color: #26ff00;">About</span>
+      </button>
+      <div id="content"></div>
+       <button onclick="location.href='service.html'" style="width: 100%; text-align: left; padding: 12px; background: none; border: none; cursor: pointer; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; font-size: 14px;">
+        <i class="fa-solid fa-wrench" style="color: #ff0a00;"></i>
+         <span style="color: #26ff00;">Services</span>
+       </button>
+      <div id="content"></div>
+
+    </div>
+     
+
+  </div>
+
+  <div class="points-bar">
+
+    <span id="currentPoints">0 Points</span>
+
+    <div class="progress-container">
+
+      <div class="progress-fill" id="progressFill"></div>
+
+    </div>
+
+    <span class="pts-target">1000 Points</span>
+  </div>
+  <div class="posts-grid" id="postsGrid">
+
+  </div>
+
+  
+
+   <div id="fixed-bottom-banner" style="position: fixed; bottom: 0; left: 0; width: 100%; height: 50px; background: #000; z-index: 999; display: flex; justify-content: center; align-items: center;">
+    <div id="container-footer-ad" style="width: 320px; height: 50px;"></div>
+</div>
+
+
+ <div id="commentModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:white; width:100%; max-width:500px; border-radius:15px; height:80vh; display:flex; flex-direction:column; position:relative;">
+        <div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; color:#333;">Comments</h3>
+            <button onclick="closeComments()" style="background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
+        </div>
+        
+        <div id="commentsList" style="flex-grow:1; overflow-y:auto; padding:15px;">
+            </div>
+
+        <div style="padding:15px; border-top:1px solid #eee; display:flex; gap:10px;">
+            <input type="text" id="commentInput" placeholder="Write a comment..." style="flex-grow:1; padding:10px; border:1px solid #ddd; border-radius:20px; outline:none;">
+            <button onclick="submitComment()" style="background:#26ff00; border:none; padding:10px 15px; border-radius:50%; cursor:pointer;">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<style>
+
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  .comment-item-style { margin-bottom: 12px; font-size: 14px; border-bottom: 1px solid #f9f9f9; padding-bottom: 8px; }
+
+</style>
+
+  <div class="footer">
+
+    <a href="index.html" class="nav-item active"><i class="fa-solid fa-house"></i><span>Home</span></a>
+    <a href="upload.html" class="nav-item"><i class="fa-solid fa-camera"></i><span>Post</span></a>
+
+   
+
+     <a href="wallet.html" class="nav-item"><i class="fa-solid fa-wallet"></i><span>Wallet</span></a>
+
+     <a href="profile.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Profile</span></a>
+
+  </div>
+
+  <div id="infoModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+
+  <div style="background:white; padding:30px; border-radius:15px; width:90%; max-width:400px; text-align:center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); position: relative; margin: auto;">
+
+    <h2 style="color:#ff0a00;">Almost Ready! 🚀</h2>
+
+    <p style="color:#666; font-size:14px; margin-bottom:20px;">Please provide your airtime details so we can send your rewards instantly.</p>
+
+   
+
+    <label style="display:block; text-align:left; font-size:12px; color:#999;">Select Network</label>
+
+    <select id="popNetwork" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #ddd;">
+
+        <option value="MTN">MTN</option>
+
+        <option value="Airtel">Airtel</option>
+
+        <option value="Glo">Glo</option>
+
+        <option value="9mobile">9mobile</option>
+
+    </select>
+
+
+
+    <label style="display:block; text-align:left; font-size:12px; color:#999;">Phone Number</label>
+
+    <input type="number" id="popPhone" placeholder="08012345678" style="width:100%; padding:12px; margin-bottom:20px; border-radius:10px; border:1px solid #ddd;">
+
+
+
+    <button onclick="saveUserInfo()" style="width:100%; background:linear-gradient(90deg, #ff0a00, #26ff00); color:white; border:none; padding:15px; border-radius:10px; font-weight:bold; cursor:pointer;">SAVE & START EARNING</button>
+
+  </div>
+
+</div>
+
+<div id="airtimePopup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center;">
+
+    <div style="background:white; padding:30px; border-radius:15px; width:90%; max-width:400px; text-align:center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); position: relative; margin: auto;">
+
+       
+
+        <h2 style="color: #ff0a00; margin-top:0;">🎁 Welcome Bonus!</h2>
+
+        <p style="color: #555; font-size: 14px;">Enter your details below to claim your free sign-up airtime.</p>
+
+       
+
+        <div style="margin: 20px 0; text-align: left;">
+
+            <label style="font-weight: bold; font-size: 12px; display:block; margin-bottom:5px;">PHONE NUMBER</label>
+
+            <input type="text" id="phoneInput" placeholder="e.g. 08012345678" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; box-sizing: border-box;">
+
+        </div>
+
+
+
+        <div style="margin: 20px 0; text-align: left;">
+
+            <label style="font-weight: bold; font-size: 12px; display:block; margin-bottom:5px;">NETWORK PROVIDER</label>
+
+            <select id="networkSelect" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; background: white;">
+
+                <option value="">Select Network</option>
+
+                <option value="MTN">MTN</option>
+
+                <option value="Airtel">Airtel</option>
+
+                <option value="Glo">Glo</option>
+
+                <option value="9mobile">9mobile</option>
+
+            </select>
+
+        </div>
+
+
+
+        <button onclick="handleClaimBonus()" style="width:100%; background:#ff0a00; color:white; border:none; padding:15px; border-radius:8px; font-weight:bold; cursor:pointer; font-size:16px;">
+
+            CLAIM AIRTIME NOW
+
+        </button>
+
+       
+
+        <p style="font-size: 10px; color: #999; margin-top: 15px;">*Bonus is for new users only. Processing takes 5-10 minutes.</p>
+
+    </div>
+
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+
+<script>
+  // 2. CONFIGURATION
+    const sdk = new Appwrite.Client();
+    sdk.setEndpoint('https://fra.cloud.appwrite.io/v1').setProject('69930a880011dec1e960');
+
+    const account = new Appwrite.Account(sdk);
+    const databases = new Appwrite.Databases(sdk);
+
+    const DB_ID = '69930af300230e5efc4d';
+    const PROFILES_ID = 'profiles';
+    const POSTS_ID = 'posts';
+    const LIKES_ID = 'likes';
+    const COMMENTS_ID = 'comments';
+
+    let currentUser = null;
+    let cachedPosts = [];
+    let isProcessingLike = false;
+
+    // 3. INITIALIZATION
+    async function init() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const secret = urlParams.get('secret');
+    const userId = urlParams.get('userId');
+
+    // 1. HANDSHAKE: If secret/userId exist, verify them right now
+    if (secret && userId) {
+        try {
+            await account.updateVerification(userId, secret);
+            // Clean the URL so the secret is gone, and show success
+            window.history.replaceState({}, document.title, "index.html?verified=true");
+            alert("✓ Gmail Verified! You can now claim your ₦100 bonus.");
+        } catch (err) {
+            console.error("Verification error:", err.message);
+        }
+    }
+
+    try {
+        // 2. CHECK SESSION
+        currentUser = await account.get();
+    } catch (err) {
+        window.location.href = "signup.html";
+        return;
+    }
+
+    // 3. ENFORCE VERIFICATION: Block content if not verified
+    if (!currentUser.emailVerification) {
+        document.body.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center; padding:20px; font-family:sans-serif;">
+                <h2 style="color:#ff0a00;">Verification Required</h2>
+                <p>Please check your Gmail and click the verification link to access the home page.</p>
+                <button onclick="location.reload()" style="padding:12px 24px; background:#333; color:white; border:none; border-radius:8px;">I've Verified, Let Me In!</button>
+            </div>
+        `;
+        return; // Stops the feed and ads from loading
+    }
+
+    // 4. SHOW BONUS: Only for verified new users
+    if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true') {
+        if (!currentUser.hasClaimedBonus) {
+            const popup = document.getElementById('airtimePopup');
+            if (popup) popup.style.display = 'flex';
+        }
+    }
+
+    // 5. LOAD APP CONTENT (Only reached if verified)
+    try {
+        const response = await databases.listDocuments(DB_ID, POSTS_ID);
+        cachedPosts = response.documents;
+        cachedPosts.sort(() => Math.random() - 0.5);
+    } catch (err) {
+        console.error("Fetch error:", err);
+    }
+
+    loadProfile();
+    renderFeed();
+    injectBottomBannerAd("container-footer-ad", "bde480069c84a2d4c2af25a3d057ea0a");
+}
+
+    // --- BOTTOM BANNER FUNCTION ---
+    function injectBottomBannerAd(containerId, adId) {
+        const container = document.getElementById(containerId);
+        if(!container) {
+            console.error("Ad container not found: " + containerId);
+            return;
+        }
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.async = true;
+        // Using the Adsterra link format you provided
+        script.src = `https://pl28777537.effectivegatecpm.com/${adId}/invoke.js`;
+        container.appendChild(script);
+    }
+
+    // --- LOAD PROFILE ---
+    async function loadProfile() {
+        try {
+            const profile = await databases.getDocument(DB_ID, PROFILES_ID, currentUser.$id);
+            const currentPoints = profile.points || 0;
+            
+            const pointsElement = document.getElementById("currentPoints");
+            if (pointsElement) pointsElement.textContent = currentPoints + " Points";
+            
+            const fill = document.getElementById("progressFill");
+            if(fill) fill.style.width = Math.min((currentPoints / 1000) * 100, 100) + "%";
+        } catch (e) { 
+            console.log("Profile load error:", e); 
+        }
+    }
+
+  // 4. LIKES LOGIC (APPWRITE VERSION)
+    async function handleLike(postId, iconElement) {
+        if (!currentUser || isProcessingLike) return; 
+        isProcessingLike = true;
+
+        const countSpan = iconElement.parentElement.querySelector('.like-count-label');
+        
+        // Better way to check if liked: check a class or a specific hex
+        const isCurrentlyLiked = iconElement.style.color === "rgb(255, 69, 0)" || 
+                                 iconElement.style.color === "#ff4500" || 
+                                 iconElement.classList.contains('active-like'); 
+
+        let currentLikes = parseInt(countSpan.textContent) || 0;
+        let newLikeCount = isCurrentlyLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1;
+
+        // UI Update (Fast)
+        iconElement.style.color = isCurrentlyLiked ? "#ccc" : "#ff4500";
+        countSpan.textContent = `${newLikeCount} Likes`;
+        if(!isCurrentlyLiked) iconElement.classList.add('active-like');
+        else iconElement.classList.remove('active-like');
+
+        try {
+            if (isCurrentlyLiked) {
+                const likeDoc = await databases.listDocuments(DB_ID, LIKES_ID, [
+                    Appwrite.Query.equal('post_id', postId),
+                    Appwrite.Query.equal('user_id', currentUser.$id)
+                ]);
+                if (likeDoc.documents.length > 0) {
+                    await databases.deleteDocument(DB_ID, LIKES_ID, likeDoc.documents[0].$id);
+                }
+            } else {
+                await databases.createDocument(DB_ID, LIKES_ID, 'unique()', {
+                    post_id: postId,
+                    user_id: currentUser.$id
+                });
+            }
+            await databases.updateDocument(DB_ID, POSTS_ID, postId, { likes: newLikeCount });
+        } catch (err) {
+            console.error("Like error:", err);
+        } finally {
+            isProcessingLike = false;
+        }
+    }
+
+    // 5. BONUS CLAIM HANDLER
+    async function handleClaimBonus() {
+        const phoneValue = document.getElementById('phoneInput').value.trim();
+        const networkValue = document.getElementById('networkSelect').value;
+
+        if (!phoneValue || !networkValue) {
+            alert("Please fill all fields");
+            return;
+        }
+        
+        // Simple Nigerian phone number validation
+        if (phoneValue.length < 11) {
+            alert("Please enter a valid 11-digit phone number");
+            return;
+        }
+
+        try {
+            // Try to update the profile first
+            await databases.updateDocument(DB_ID, PROFILES_ID, currentUser.$id, {
+                phone_number: phoneValue,
+                network: networkValue
+            });
+            
+            // ALSO: Create a record in a "withdrawals" collection so you know who to pay!
+            // If you haven't created this collection yet, you can comment this out.
+            try {
+                await databases.createDocument(DB_ID, 'withdrawals', 'unique()', {
+                    user_id: currentUser.$id,
+                    phone: phoneValue,
+                    network: networkValue,
+                    amount: 100,
+                    status: "pending",
+                    type: "signup_bonus"
+                });
+            } catch (e) { console.log("Withdrawal log failed, but profile updated."); }
+
+            finalizeClaim();
+
+        } catch (error) {
+            // If the profile document doesn't exist yet (Error 404), create it
+            if (error.code === 404) {
+                try {
+                    await databases.createDocument(DB_ID, PROFILES_ID, currentUser.$id, {
+                        phone_number: phoneValue,
+                        network: networkValue,
+                        points: 0 
+                    });
+                    finalizeClaim();
+                } catch (createErr) {
+                    alert("Account Sync Error: " + createErr.message);
+                }
+            } else {
+                alert("Update Error: " + error.message);
+            }
+        }
+    }
+
+    function finalizeClaim() {
+        alert("Bonus Claimed! Your ₦100 Airtime will be sent to " + document.getElementById('phoneInput').value + " shortly.");
+        document.getElementById('airtimePopup').style.display = 'none';
+        // Remove the ?newuser=true from URL so popup doesn't come back on refresh
+        window.history.replaceState({}, document.title, "index.html");
+    }
+   // 3. RENDER FEED
+    async function renderFeed() {
+        const grid = document.getElementById("postsGrid");
+        if (!grid || cachedPosts.length === 0) return;
+
+        try {
+            // 1. Fetch current user's likes to show orange hearts
+            const likesRes = await databases.listDocuments(DB_ID, LIKES_ID, [
+                Appwrite.Query.equal('user_id', currentUser.$id)
+            ]);
+            const myLikedIds = likesRes.documents.map(l => l.post_id);
+
+            let html = "";
+            cachedPosts.forEach((post, index) => {
+                const isLiked = myLikedIds.includes(post.$id);
+                const userPfp = post.pfp ? post.pfp : `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user_id}`;
+                const profileLink = `profile.html?id=${post.user_id}`;
+
+                const mediaHtml = post.type === "video" 
+                    ? `<div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background:black;">
+                        <video id="vid-${post.$id}" src="${post.url}" class="responsive-media user-video" loop muted autoplay playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
+                        <button onclick="togglePostSound('${post.$id}', event)" style="position: absolute; bottom: 15px; right: 15px; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; width: 35px; height: 35px; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 20;">
+                            <i id="icon-${post.$id}" class="fa-solid fa-volume-xmark" style="font-size: 14px;"></i>
+                        </button>
+                       </div>`
+                    : `<img src="${post.url}" class="responsive-media">`;
+
+                html += `
+                <div class="post" id="post-${post.$id}">
+                    <div class="post-image" ondblclick="handleLike('${post.$id}', this.parentElement.querySelector('.fa-fire'))">
+                        ${mediaHtml}
+                    </div>
+                    <div class="post-details">
+                        <div style="display: flex; align-items: flex-start; margin-bottom: 10px;">
+                            <a href="${profileLink}" style="text-decoration: none; display: flex; align-items: center; cursor: pointer;">
+                                <img src="${userPfp}" class="post-profile-icon" style="width: 38px; height: 38px; border-radius: 50%; border: 2px solid #26ff00; margin-right: 12px;">
+                                <div style="flex-grow: 1;">
+                                    <div class="post-user" style="color: #333; font-weight: bold;">@${post.username || 'User'}</div>
+                                    <div class="post-caption" style="font-size: 13px; color: #444;">${post.caption || ''}</div>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <div class="interaction-bar" style="display: flex; align-items: center; margin-bottom: 8px;">
+                            <i class="fa-solid fa-fire" 
+                               style="color: ${isLiked ? '#ff4500' : '#ccc'}; cursor: pointer; font-size: 22px;" 
+                               onclick="handleLike('${post.$id}', this)"></i>
+                            <i class="fa-regular fa-comment" style="margin-left: 15px; cursor: pointer; font-size: 22px;" onclick="openComments('${post.$id}')"></i>
+                            <span class="like-count-label" style="font-size: 14px; font-weight: bold; color: #333; margin-left: auto;">${post.likes || 0} Likes</span>
+                        </div>
+
+                        <div id="preview-${post.$id}" class="comment-preview" style="font-size: 13px; color: #666; border-top: 1px solid #f0f0f0; padding-top: 8px;">
+                            <p style="margin: 0; color: #999; cursor: pointer;" onclick="openComments('${post.$id}')">View all comments...</p>
+                        </div>
+                    </div>
+                </div>`;
+
+                // --- ADSTERRA RECURRING AD INJECTION (Every 3 posts) ---
+                if ((index + 1) % 3 === 0) {
+                    const adSlotId = `ad-provider-container-${index}`;
+                   // Change the ad injection part to this:
+                    html += `
+                    <div class="post ad-post" data-ad-index="${index}" data-earned="false" style="background: #111; border: 2px solid #333; margin-bottom: 20px;">
+                        <div style="padding: 10px; font-size: 11px; color: #fff; background: #333; display: flex; justify-content: space-between;">
+                            <span>SPONSORED REWARD</span>
+                            <span style="color: #26ff00; font-weight: bold;">VIEW FOR 15s</span>
+                        </div>
+                        <div class="post-image" style="min-height: 250px; background: #000; display: flex; align-items: center; justify-content: center;">
+                            <div id="ad-provider-container-${index}" style="width: 300px; height: 250px;">
+                                <p style="color: #444; font-size: 10px;">LOADING AD...</p>
+                            </div>
+                        </div>
+                        <div id="earnedBadge${index}" style="display:none; text-align:center; background:#26ff00; color:#000; padding:8px; font-weight:bold; font-size:12px;">
+                            ✓ +2 POINTS EARNED
+                        </div>
+                    </div>`;
+                }
+            });
+
+            grid.innerHTML = html;
+
+            // 2. ACTIVATE ADS: Loop through all newly created ad containers
+            document.querySelectorAll('[id^="ad-provider-container-"]').forEach(div => {
+                injectPartnerAd(div.id);
+            });
+
+            // 3. ACTIVATE SENSOR: Watch for ads coming into view
+            document.querySelectorAll('.ad-post').forEach(ad => adObserver.observe(ad));
+
+            // 4. LOAD COMMENT PREVIEWS
+            loadPreviews();
+
+        } catch (error) {
+            console.error("Render Error:", error);
+        }
+    }
+
+    // Helper function to keep renderFeed clean
+    async function loadPreviews() {
+        cachedPosts.forEach(async (post) => {
+            try {
+                const comms = await databases.listDocuments(DB_ID, COMMENTS_ID, [
+                    Appwrite.Query.equal('post_id', post.$id),
+                    Appwrite.Query.limit(1),
+                    Appwrite.Query.orderDesc('$createdAt')
+                ]);
+
+                const previewDiv = document.getElementById(`preview-${post.$id}`);
+                if (previewDiv && comms.documents.length > 0) {
+                    const latest = comms.documents[0];
+                    previewDiv.innerHTML = `
+                        <div style="margin-bottom: 4px;">
+                            <b style="color: #333;">@${latest.username || 'User'}</b> ${latest.content}
+                        </div>
+                        <p style="margin: 0; color: #26ff00; font-weight: bold; cursor: pointer; font-size: 11px;" onclick="openComments('${post.$id}')">VIEW ALL COMMENTS</p>
+                    `;
+                }
+            } catch (e) { console.log("Error loading preview for " + post.$id); }
+        });
+    }
+
+    // 4. LIKES
+
+   
+   // 5. SMART AD SENSOR (REWARD LOGIC)
+   const adObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        const target = entry.target;
+        
+        if (entry.isIntersecting && target.getAttribute('data-earned') !== 'true') {
+            console.log("Ad visible. Starting 15s timer...");
+            
+            // Start the timer
+            const timerId = setTimeout(() => {
+                // ONLY award points when the 15 seconds are up
+                givePoints(target, 2);
+            }, 15000); 
+
+            target.dataset.timeoutId = timerId;
+        } else {
+            // If they scroll away before 15s, cancel the timer
+            const existingTimer = target.dataset.timeoutId;
+            if (existingTimer) {
+                clearTimeout(existingTimer);
+                delete target.dataset.timeoutId;
+                console.log("Timer cancelled - scrolled away.");
+            }
+        }
+    });
+}, { threshold: 0.8 }); // 80% of ad must be visible
+
+    // 6. IMPROVED GIVE POINTS FUNCTION
+    async function givePoints(element, amount) {
+        // Prevent double-earning on the same ad
+        if (!element || element.getAttribute('data-earned') === 'true') return;
+        
+        element.setAttribute('data-earned', 'true');
+
+        try {
+            // 1. Get current profile points from Appwrite
+            const profile = await databases.getDocument(DB_ID, PROFILES_ID, currentUser.$id);
+            const newTotal = (profile.points || 0) + amount;
+
+            // 2. Update Appwrite
+            await databases.updateDocument(DB_ID, PROFILES_ID, currentUser.$id, {
+                points: newTotal
+            });
+
+            // 3. UI Updates
+            const ptsDisplay = document.getElementById("currentPoints");
+            if (ptsDisplay) ptsDisplay.textContent = newTotal + " Points";
+            
+            // Highlight the ad as "Completed"
+            element.style.borderColor = "#26ff00";
+            element.style.boxShadow = "0 0 15px rgba(38, 255, 0, 0.3)";
+
+            // Find and show the specific badge for this ad
+            // We search within the 'element' (the ad-post)
+            const index = element.getAttribute('data-ad-index');
+            const badge = document.getElementById(`earnedBadge${index}`);
+            if (badge) {
+                badge.style.display = 'block';
+                badge.innerHTML = `✓ +${amount} Points Earned`;
+            }
+
+        } catch (err) {
+            console.error("Points update failed:", err);
+            // Reset state if database fails so they can try again
+            element.setAttribute('data-earned', 'false');
+        }
+    }
+
+    // 7. SOUND TOGGLES
+    function toggleAdSound(index) {
+        const v = document.getElementById(`adMedia${index}`);
+        const i = document.getElementById(`volIcon${index}`);
+        if (v) {
+            v.muted = !v.muted;
+            if (i) {
+                i.className = v.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+                i.style.color = v.muted ? "white" : "#26ff00";
+            }
+        }
+    }
+
+    function togglePostSound(postId, event) {
+        if(event) event.stopPropagation(); 
+        const video = document.getElementById(`vid-${postId}`);
+        const icon = document.getElementById(`icon-${postId}`);
+        if (!video) return;
+
+        video.muted = !video.muted;
+        if (icon) {
+            icon.className = video.muted ? "fa-solid fa-volume-xmark" : "fa-solid fa-volume-high";
+            icon.style.color = video.muted ? "white" : "#26ff00";
+        }
+    }
+  // 8. COMMENT SYSTEM (OPEN/LOAD/SUBMIT)
+    let activePostId = null; // Track which post is being commented on
+
+    async function openComments(postId) {
+        activePostId = postId;
+        const modal = document.getElementById("commentModal");
+        if (modal) {
+            modal.style.display = "flex";
+            loadComments(postId);
+        }
+    }
+
+    function closeComments() {
+        const modal = document.getElementById("commentModal");
+        if (modal) modal.style.display = "none";
+        activePostId = null;
+    }
+
+    async function loadComments(postId) {
+        const list = document.getElementById("commentsList");
+        if (!list) return;
+
+        list.innerHTML = `<p style="text-align:center; color:#999; margin-top:20px;">Loading...</p>`;
+
+        try {
+            const response = await databases.listDocuments(DB_ID, COMMENTS_ID, [
+                Appwrite.Query.equal('post_id', postId),
+                Appwrite.Query.orderDesc('$createdAt') // Show newest comments first
+            ]);
+
+            if (response.documents.length === 0) {
+                list.innerHTML = `<p style="text-align:center; color:#999; margin-top:20px;">No comments yet.</p>`;
+                return;
+            }
+
+            list.innerHTML = response.documents.map(c => `
+                <div style="display:flex; gap:10px; margin-bottom:15px; align-items:flex-start;">
+                    <div style="background:#f0f2f5; padding:8px 12px; border-radius:12px; max-width:85%;">
+                        <div style="font-weight:bold; font-size:12px; color:#333;">@${c.username || 'User'}</div>
+                        <div style="font-size:13px; color:#444;">${c.content}</div>
+                    </div>
+                </div>
+            `).join('');
+        } catch (err) {
+            list.innerHTML = `<p style="text-align:center; color:red;">Error loading comments.</p>`;
+        }
+    }
+
+    async function submitComment() {
+        const input = document.getElementById("commentInput");
+        const text = input.value.trim();
+        if (!text || !activePostId) return;
+
+        try {
+            // Get user info: Try account first, then profiles collection
+            let displayUsername = currentUser.name;
+            
+            if (!displayUsername || displayUsername === "") {
+                try {
+                    const profile = await databases.getDocument(DB_ID, PROFILES_ID, currentUser.$id);
+                    displayUsername = profile.username || "User";
+                } catch (e) {
+                    displayUsername = "User";
+                }
+            }
+
+            await databases.createDocument(DB_ID, COMMENTS_ID, 'unique()', {
+                post_id: activePostId,
+                user_id: currentUser.$id,
+                username: displayUsername,
+                content: text
+            });
+
+            input.value = "";
+            loadComments(activePostId); 
+            
+            // Refresh the preview in the feed behind the modal
+            const previewDiv = document.getElementById(`preview-${activePostId}`);
+            if (previewDiv) {
+                previewDiv.innerHTML = `<div style="margin-bottom:4px;"><b>@${displayUsername}</b> ${text}</div>
+                <p style="color:#26ff00; font-weight:bold; cursor:pointer; font-size:11px;" onclick="openComments('${activePostId}')">VIEW ALL COMMENTS</p>`;
+            }
+
+        } catch (err) {
+            console.error("Appwrite Comment Error:", err);
+            alert("Comment failed. Check if 'username' exists in your Comments collection!");
+        }
+    }
+
+    // 9. AD NETWORK INJECTION (PARTNER ADS)
+ function injectPartnerAd(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const adId = "5fdf05f4f0a9f7a9dde27a97d34af9b1";
+    
+    // 1. Clear container and create iframe
+    container.innerHTML = ""; 
+    const iframe = document.createElement('iframe');
+    
+    // 2. Set attributes safely
+    iframe.style.width = "300px";
+    iframe.style.height = "250px";
+    iframe.style.border = "none";
+    iframe.style.overflow = "hidden";
+    iframe.setAttribute('scrolling', 'no');
+    
+    container.appendChild(iframe);
+
+    // 3. The Fix: Use a small delay or onload to ensure the iframe is ready
+    setTimeout(() => {
+        try {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            if (!iframeDoc) return;
+
+            iframeDoc.open();
+            // We use a simplified script injection that Adsterra prefers
+            iframeDoc.write(`
+                <!DOCTYPE html>
+                <html>
+                <body style="margin:0; padding:0; display:flex; justify-content:center; align-items:center; background:transparent;">
+                    <div id="ad-space">
+                        <script type="text/javascript">
+                            atOptions = {
+                                'key' : '${adId}',
+                                'format' : 'iframe',
+                                'height' : 250,
+                                'width' : 300,
+                                'params' : {}
+                            };
+                        <\/script>
+                        <script type="text/javascript" src="//www.profitabledisplaynetwork.com/${adId}/invoke.js"><\/script>
+                    </div>
+                </body>
+                </html>
+            `);
+            iframeDoc.close();
+        } catch (e) {
+            console.error("Iframe Injection Error:", e);
+            // Fallback: If iframe fails, try direct injection as a last resort
+            container.innerHTML = `<p style="font-size:10px; color:#333;">Ad Loading...</p>`;
+        }
+    }, 100); // 100ms pause gives the browser time to breathe
+}
+  // --- 7. BONUS CLAIM HANDLER ---
+    async function handleClaimBonus() {
+        const phone = document.getElementById('phoneInput').value;
+        const network = document.getElementById('networkSelect').value;
+
+        if (!phone || !network) {
+            alert("Please fill all fields");
+            return;
+        }
+
+        try {
+            // 1. Update Profile
+            await databases.updateDocument(DB_ID, PROFILES_ID, currentUser.$id, {
+                phone_number: phone,
+                network: network
+            });
+
+            // 2. Create Withdrawal Record
+            await databases.createDocument(DB_ID, 'withdrawals', 'unique()', {
+                user_id: currentUser.$id,
+                amount: 100, // Fixed 100 airtime bonus
+                phone: phone,
+                network: network,
+                status: "pending",
+                type: "signup_bonus"
+            });
+
+            alert("Bonus Claimed! Airtime will be sent shortly.");
+            document.getElementById('airtimePopup').style.display = 'none';
+            // Clear URL and refresh UI
+            window.history.replaceState({}, document.title, "index.html");
+        } catch (error) {
+            console.error("Bonus error:", error);
+            alert("Error: " + error.message);
+        }
+    }
+
+    // --- 8. UI CONTROLS ---
+    function toggleSettingsMenu() {
+        const menu = document.getElementById('settingsMenu');
+        if (!menu) return;
+        menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+    }
+        // Function to load the sticky bottom banner
+function loadFooterAd() {
+    const footerContainerId = "container-footer-ad";
+    const adId = "bde480069c84a2d4c2af25a3d057ea0a"; // Use your Footer Zone ID here
+
+    const container = document.getElementById(footerContainerId);
+    if (!container) return;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.width = "320px";
+    iframe.style.height = "50px";
+    iframe.style.border = "none";
+    iframe.style.overflow = "hidden";
+    iframe.setAttribute('scrolling', 'no');
+
+    container.innerHTML = ""; 
+    container.appendChild(iframe);
+
+    setTimeout(() => {
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        if (!iframeDoc) return;
+
+        iframeDoc.open();
+        iframeDoc.write(`
+            <body style="margin:0; padding:0; display:flex; justify-content:center; align-items:center; background:black;">
+                <script type="text/javascript">
+                    atOptions = {
+                        'key' : '${adId}',
+                        'format' : 'iframe',
+                        'height' : 50,
+                        'width' : 320,
+                        'params' : {}
+                    };
+                <\/script>
+                <script type="text/javascript" src="//www.profitabledisplaynetwork.com/${adId}/invoke.js"><\/script>
+            </body>
+        `);
+        iframeDoc.close();
+    }, 200);
+}
+
+// Call it when the window loads
+window.addEventListener('DOMContentLoaded', loadFooterAd);
+    // --- 9. FINAL APP START ---
+    // This starts everything we've built piece by piece
+    init();
+
+</script>
+
+</body>
+
+</html> 
