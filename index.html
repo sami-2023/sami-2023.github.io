@@ -474,7 +474,8 @@
         try {
             await account.updateVerification(userId, secret);
             // Clean the URL so the secret is gone, and show success
-            window.history.replaceState({}, document.title, "index.html?verified=true");
+           // To this (to stay inside your folder):
+window.history.replaceState({}, document.title, "/samiAppwrite/index.html?verified=true");
             alert("✓ Gmail Verified! You can now claim your ₦100 bonus.");
         } catch (err) {
             console.error("Verification error:", err.message);

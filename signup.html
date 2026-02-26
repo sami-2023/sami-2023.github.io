@@ -108,9 +108,8 @@
         await account.createEmailSession(email, password);
 
         // 3. Send the Verification Email
-        // This will send the user to your verify.html page
-        await account.createVerification('https://sami-2023.github.io/verify.html');
-
+      // This tells Appwrite the EXACT subfolder where your index.html lives
+        await account.createVerification('https://sami-2023.github.io/samiAppwrite/index.html');
         // 4. Create the Profile Document
         await databases.createDocument(DB_ID, PROFILES_ID, userAccount.$id, {
             username: username,
