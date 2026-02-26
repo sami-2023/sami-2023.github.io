@@ -991,60 +991,55 @@ if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true')
         }
     }
 
-    // 9. AD NETWORK INJECTION (PARTNER ADS)
  function injectPartnerAd(containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    const adId = "5fdf05f4f0a9f7a9dde27a97d34af9b1";
-    
-    // 1. Clear container and create iframe
-    container.innerHTML = ""; 
-    const iframe = document.createElement('iframe');
-    
-    // 2. Set attributes safely
-    iframe.style.width = "300px";
-    iframe.style.height = "250px";
-    iframe.style.border = "none";
-    iframe.style.overflow = "hidden";
-    iframe.setAttribute('scrolling', 'no');
-    
-    container.appendChild(iframe);
+    // 50/50 Chance: 0 = Banner, 1 = Social Bar (Video-style) Script
+    const choice = Math.floor(Math.random() * 2);
 
-    // 3. The Fix: Use a small delay or onload to ensure the iframe is ready
-    setTimeout(() => {
-        try {
+    if (choice === 0) {
+        // --- CHOICE 0: LOAD 300x250 BANNER ---
+        const adId = "5fdf05f4f0a9f7a9dde27a97d34af9b1";
+        container.innerHTML = ""; 
+        const iframe = document.createElement('iframe');
+        iframe.style.width = "300px";
+        iframe.style.height = "250px";
+        iframe.style.border = "none";
+        iframe.setAttribute('scrolling', 'no');
+        container.appendChild(iframe);
+
+        setTimeout(() => {
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
             if (!iframeDoc) return;
-
             iframeDoc.open();
-            // We use a simplified script injection that Adsterra prefers
             iframeDoc.write(`
-                <!DOCTYPE html>
-                <html>
                 <body style="margin:0; padding:0; display:flex; justify-content:center; align-items:center; background:transparent;">
-                    <div id="ad-space">
-                        <script type="text/javascript">
-                            atOptions = {
-                                'key' : '${adId}',
-                                'format' : 'iframe',
-                                'height' : 250,
-                                'width' : 300,
-                                'params' : {}
-                            };
-                        <\/script>
-                        <script type="text/javascript" src="//www.profitabledisplaynetwork.com/${adId}/invoke.js"><\/script>
-                    </div>
+                    <script type="text/javascript">
+                        atOptions = { 'key' : '${adId}', 'format' : 'iframe', 'height' : 250, 'width' : 300, 'params' : {} };
+                    <\/script>
+                    <script type="text/javascript" src="//www.profitabledisplaynetwork.com/${adId}/invoke.js"><\/script>
                 </body>
-                </html>
             `);
             iframeDoc.close();
-        } catch (e) {
-            console.error("Iframe Injection Error:", e);
-            // Fallback: If iframe fails, try direct injection as a last resort
-            container.innerHTML = `<p style="font-size:10px; color:#333;">Ad Loading...</p>`;
-        }
-    }, 100); // 100ms pause gives the browser time to breathe
+        }, 100);
+
+    } else {
+        // --- CHOICE 1: LOAD SOCIAL BAR SCRIPT ---
+        // We clear the container and add a visual "loading" indicator
+        container.innerHTML = `
+            <div style="text-align:center; color:#555; font-size:12px; padding-top:100px;">
+                <i class="fa-solid fa-play-circle" style="font-size:30px; color:#26ff00;"></i><br>
+                Interactive Ad Loading...
+            </div>
+        `;
+        
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        // Your specific Adsterra Social Bar Source
+        script.src = 'https://pl28795888.effectivegatecpm.com/be/7e/f4/be7ef4357e50d4d0e0fc10e3441f9c8d.js';
+        container.appendChild(script);
+    }
 }
   // --- 7. BONUS CLAIM HANDLER ---
     async function handleClaimBonus() {
