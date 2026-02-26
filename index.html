@@ -473,6 +473,9 @@
     if (secret && userId) {
         try {
             await account.updateVerification(userId, secret);
+            // FORCE the popup to show immediately after successful verification
+        const popup = document.getElementById('airtimePopup');
+        if (popup) popup.style.display = 'flex';
             // Clean the URL so the secret is gone, and show success
            // To this (to stay inside your folder):
 window.history.replaceState({}, document.title, "/samiAppwrite/index.html?verified=true");
@@ -502,13 +505,14 @@ window.history.replaceState({}, document.title, "/samiAppwrite/index.html?verifi
         return; // Stops the feed and ads from loading
     }
 
-    // 4. SHOW BONUS: Only for verified new users
-    if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true') {
-        if (!currentUser.hasClaimedBonus) {
-            const popup = document.getElementById('airtimePopup');
-            if (popup) popup.style.display = 'flex';
-        }
+   // 4. SHOW BONUS: Check for both 'newuser' OR 'verified' tags
+if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true') {
+    // Check if user is verified AND hasn't claimed yet
+    if (currentUser.emailVerification && !currentUser.hasClaimedBonus) {
+        const popup = document.getElementById('airtimePopup');
+        if (popup) popup.style.display = 'flex';
     }
+}
 
     // 5. LOAD APP CONTENT (Only reached if verified)
     try {
