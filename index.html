@@ -730,8 +730,10 @@ if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true')
                     html += `
                     <div class="post ad-post" data-ad-index="${index}" data-earned="false" style="background: #111; border: 2px solid #333; margin-bottom: 20px;">
                         <div style="padding: 10px; font-size: 11px; color: #fff; background: #333; display: flex; justify-content: space-between;">
-                            <span>SPONSORED REWARD</span>
-                            <span style="color: #26ff00; font-weight: bold;">VIEW FOR 15s</span>
+                                                    <span>SPONSORED REWARD</span>
+                            <span style="color: #26ff00; font-weight: bold;">
+                                <i class="fa-solid fa-clock"></i> <span id="timer-${index}">15s</span>
+                            </span>
                         </div>
                         <div class="post-image" style="min-height: 250px; background: #000; display: flex; align-items: center; justify-content: center;">
                             <div id="ad-provider-container-${index}" style="width: 300px; height: 250px;">
@@ -791,31 +793,48 @@ if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true')
 
    
    // 5. SMART AD SENSOR (REWARD LOGIC)
-   const adObserver = new IntersectionObserver((entries) => {
+  const adObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         const target = entry.target;
+        const idx = target.getAttribute('data-ad-index');
+        const timerSpan = document.getElementById(`timer-${idx}`);
         
         if (entry.isIntersecting && target.getAttribute('data-earned') !== 'true') {
-            console.log("Ad visible. Starting 15s timer...");
+            console.log("Ad visible. Starting 15s countdown...");
             
-            // Start the timer
-            const timerId = setTimeout(() => {
-                // ONLY award points when the 15 seconds are up
-                givePoints(target, 2);
-            }, 15000); 
+            let timeLeft = 15;
+            
+            // Clear any old intervals to prevent "speeding" timers
+            if(target.dataset.intervalId) clearInterval(target.dataset.intervalId);
 
-            target.dataset.timeoutId = timerId;
+            // Start a 1-second interval
+            const intervalId = setInterval(() => {
+                timeLeft--;
+                
+                // Update the text in the UI
+                if (timerSpan) timerSpan.innerText = timeLeft + "s";
+
+                if (timeLeft <= 0) {
+                    clearInterval(intervalId);
+                    if (timerSpan) timerSpan.innerText = "DONE";
+                    givePoints(target, 2);
+                }
+            }, 1000);
+
+            // Store the ID so we can stop it if they scroll away
+            target.dataset.intervalId = intervalId;
+            
         } else {
-            // If they scroll away before 15s, cancel the timer
-            const existingTimer = target.dataset.timeoutId;
-            if (existingTimer) {
-                clearTimeout(existingTimer);
-                delete target.dataset.timeoutId;
-                console.log("Timer cancelled - scrolled away.");
+            // If they scroll away before 15s, stop the timer and reset
+            if (target.dataset.intervalId) {
+                clearInterval(target.dataset.intervalId);
+                if (timerSpan) timerSpan.innerText = "15s"; // Reset UI
+                delete target.dataset.intervalId;
+                console.log("Timer stopped - user scrolled away.");
             }
         }
     });
-}, { threshold: 0.8 }); // 80% of ad must be visible
+}, { threshold: 0.8 });
 
     // 6. IMPROVED GIVE POINTS FUNCTION
     async function givePoints(element, amount) {
