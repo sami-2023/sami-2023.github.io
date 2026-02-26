@@ -124,14 +124,14 @@
     .posts-grid {
       flex-grow: 1;
       overflow-y: auto;
-      scroll-snap-type: y mandatory;
+      
       padding-bottom: 140px !important;
     }
     .posts-grid::-webkit-scrollbar { display: none; }
 
     .post {
-      height: calc(100vh - 250px);
-      scroll-snap-align: start;
+      min-height: 450px;
+      
       display: flex;
       flex-direction: column;
       background: white;
@@ -995,53 +995,37 @@ if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true')
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    // 50/50 Chance: 0 = Banner (15s Timer), 1 = Social Bar (Click Popup)
-    const choice = Math.floor(Math.random() * 2);
+    // --- 1. ALWAYS LOAD THE 300x250 BANNER IN THE FEED ---
+    const adId = "5fdf05f4f0a9f7a9dde27a97d34af9b1";
+    container.innerHTML = ""; 
+    const iframe = document.createElement('iframe');
+    iframe.style.width = "300px";
+    iframe.style.height = "250px";
+    iframe.style.border = "none";
+    iframe.setAttribute('scrolling', 'no');
+    container.appendChild(iframe);
 
-    if (choice === 0) {
-        // --- CHOICE 0: LOAD 300x250 BANNER ---
-        const adId = "5fdf05f4f0a9f7a9dde27a97d34af9b1";
-        container.innerHTML = ""; 
-        const iframe = document.createElement('iframe');
-        iframe.style.width = "300px";
-        iframe.style.height = "250px";
-        iframe.style.border = "none";
-        iframe.setAttribute('scrolling', 'no');
-        container.appendChild(iframe);
+    setTimeout(() => {
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        if (!iframeDoc) return;
+        iframeDoc.open();
+        iframeDoc.write(`
+            <body style="margin:0; padding:0; display:flex; justify-content:center; align-items:center; background:transparent;">
+                <script type="text/javascript">
+                    atOptions = { 'key' : '${adId}', 'format' : 'iframe', 'height' : 250, 'width' : 300, 'params' : {} };
+                <\/script>
+                <script type="text/javascript" src="//www.profitabledisplaynetwork.com/${adId}/invoke.js"><\/script>
+            </body>
+        `);
+        iframeDoc.close();
+    }, 100);
 
-        setTimeout(() => {
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-            if (!iframeDoc) return;
-            iframeDoc.open();
-            iframeDoc.write(`
-                <body style="margin:0; padding:0; display:flex; justify-content:center; align-items:center; background:transparent;">
-                    <script type="text/javascript">
-                        atOptions = { 'key' : '${adId}', 'format' : 'iframe', 'height' : 250, 'width' : 300, 'params' : {} };
-                    <\/script>
-                    <script type="text/javascript" src="//www.profitabledisplaynetwork.com/${adId}/invoke.js"><\/script>
-                </body>
-            `);
-            iframeDoc.close();
-        }, 100);
-
-    } else {
-        // --- CHOICE 1: LOAD SOCIAL BAR (WAIT FOR POPUP CLICK) ---
-        container.innerHTML = `
-            <div style="text-align:center; color:#fff; background:#111; height:250px; display:flex; flex-direction:column; justify-content:center; align-items:center; border-radius:10px; border: 1px solid #444;">
-                <i class="fa-solid fa-up-right-from-square" style="font-size:30px; color:#26ff00; margin-bottom:15px;"></i>
-                <span style="font-weight:bold;">CLICK THE FLOATING AD</span>
-                <p style="font-size:11px; color:#888; margin-top:5px; padding: 0 20px;">Click the notification/popup to claim points!</p>
-            </div>
-        `;
-        
-        // Tag this container so the 'onblur' listener knows which one to reward
-        container.classList.add('waiting-for-ad-click');
-
-        const script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = 'https://pl28795888.effectivegatecpm.com/be/7e/f4/be7ef4357e50d4d0e0fc10e3441f9c8d.js';
-        document.body.appendChild(script);
-    }
+    // --- 2. ALSO TRIGGER THE SOCIAL BAR (POPUP) ---
+    // This script won't take up space in your feed; it will just pop up in the corner
+    const socialScript = document.createElement('script');
+    socialScript.type = 'text/javascript';
+    socialScript.src = 'https://pl28795888.effectivegatecpm.com/be/7e/f4/be7ef4357e50d4d0e0fc10e3441f9c8d.js';
+    document.body.appendChild(socialScript);
 }
   // --- 7. BONUS CLAIM HANDLER ---
     async function handleClaimBonus() {
@@ -1129,10 +1113,8 @@ function loadFooterAd() {
 
 // Call it when the window loads
 window.addEventListener('DOMContentLoaded', loadFooterAd);
-    // --- 9. FINAL APP START ---
-    // This starts everything we've built piece by piece
-    init();
-    window.onblur = function() {
+
+ window.onblur = function() {
     // Check if there is an ad slot on screen waiting for a click
     const waitingAd = document.querySelector('.waiting-for-ad-click');
     
@@ -1162,6 +1144,10 @@ window.addEventListener('DOMContentLoaded', loadFooterAd);
         }
     }
 };
+    // --- 9. FINAL APP START ---
+    // This starts everything we've built piece by piece
+    init();
+   
 </script>
 
 </body>
