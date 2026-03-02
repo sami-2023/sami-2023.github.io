@@ -211,22 +211,19 @@
 
     let selectedFileBlob = null;
     let fileType = "";
-    let lastClaimTime = 0; // Security guard for bonus points
+    let lastClaimTime = 0; 
 
-    // --- 2. ADSTERRA INJECTION ---
-    function injectAds() {
-        // Social Bar (Pop-under style)
-        const s = document.createElement('script');
-        s.src = 'https://pl28795888.effectivegatecpm.com/be/7e/f4/be7ef4357e50d4d0e0fc10e3441f9c8d.js';
-        document.body.appendChild(s);
-
-        // Footer Banner
+    // --- 2. STATIC FOOTER AD INJECTION ---
+    function injectFooterAd() {
         const footerBanner = document.querySelector('.ad-banner');
         if (footerBanner) {
             const adId = "bde480069c84a2d4c2af25a3d057ea0a";
+            footerBanner.innerHTML = ""; // Clear existing
             const iframe = document.createElement('iframe');
             iframe.style = "width:320px; height:50px; border:none; overflow:hidden;";
+            iframe.setAttribute('scrolling', 'no');
             footerBanner.appendChild(iframe);
+            
             const doc = iframe.contentDocument || iframe.contentWindow.document;
             doc.open();
             doc.write(`<body style="margin:0;"><script type="text/javascript">atOptions={'key':'${adId}','format':'iframe','height':50,'width':320,'params':{}};\x3C/script><script type="text/javascript" src="//www.profitabledisplaynetwork.com/${adId}/invoke.js">\x3C/script></body>`);
@@ -234,7 +231,7 @@
         }
     }
 
-    // --- 3. UI HANDLERS (Mapped to window for HTML buttons) ---
+    // --- 3. UI HANDLERS ---
     window.handleFile = function(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -252,35 +249,54 @@
         document.getElementById('uploadModal').style.display = 'flex';
     };
 
+    // --- 4. REWARD AD HANDLER (300x250 BANNER) ---
     window.startRewardAd = function() {
         document.getElementById('uploadModal').style.display = 'none';
         const screen = document.getElementById('adScreen');
-        const vid = document.getElementById('rewardVid');
+        const adContainer = document.getElementById('rewardVidContainer'); 
+        
         screen.style.display = 'flex';
-        vid.play();
+        
+        const adId = '5fdf05f4f0a9f7a9dde27a97d34af9b1';
+        adContainer.innerHTML = ""; 
+        
+        const iframe = document.createElement('iframe');
+        iframe.style = "width:300px; height:250px; border:none; overflow:hidden;";
+        iframe.setAttribute('scrolling', 'no');
+        adContainer.appendChild(iframe);
+        
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write(`
+            <body style="margin:0; display:flex; justify-content:center; align-items:center;">
+                <script type="text/javascript">
+                    atOptions = { 'key' : '${adId}', 'format' : 'iframe', 'height' : 250, 'width' : 300, 'params' : {} };
+                <\/script>
+                <script type="text/javascript" src="//www.highperformanceformat.com/${adId}/invoke.js"><\/script>
+            </body>
+        `);
+        doc.close();
 
         let count = 15;
         const interval = setInterval(() => {
             count--;
-            document.getElementById('timer').textContent = count;
+            const timerEl = document.getElementById('timer');
+            if (timerEl) timerEl.textContent = count;
+            
             if (count <= 0) {
                 clearInterval(interval);
-                vid.pause();
                 screen.style.display = 'none';
                 finalizeUpload(true); 
             }
         }, 1000);
     };
-
  // --- 4. PROTECTED UPLOAD LOGIC ---
     async function finalizeUpload(isBonus = false) {
         const now = Date.now();
         
         // SECURITY CHECK: Time-Lock
-        // Prevents users from skipping the 15s ad timer via the console
         if (isBonus && (now - lastClaimTime < 14000)) {
             console.warn("Security Alert: Action too fast.");
-            // We still let them upload, but we deny the bonus points
             isBonus = false; 
         }
 
@@ -322,9 +338,9 @@
                 likes: 0
             });
 
-            // D. Reward Points (Update Appwrite Document)
+            // D. Reward Points
             if (isBonus) {
-                lastClaimTime = Date.now(); // Update the lock timestamp
+                lastClaimTime = Date.now();
                 const newPoints = (profile.points || 0) + 2;
                 await databases.updateDocument(DB_ID, PROFILES_ID, user.$id, {
                     points: newPoints
@@ -340,24 +356,30 @@
         }
     }
 
-    // Map to window so the Reward Ad timer can find it
+    // Map to window for accessibility
     window.finalizeUpload = finalizeUpload;
 
-    // [WAITING FOR PART 3: window.onload and Closing the IIFE]
+    // --- 5. INITIALIZATION ---
+    window.onload = async function() {
+        // Load the static footer ad
+        injectFooterAd();
 
-  // 4. Initial Points Load
-  window.onload = async function() {
-    try {
-      const user = await account.get();
-      const profile = await databases.getDocument(DB_ID, PROFILES_ID, user.$id);
-      if(profile) {
-        const pts = profile.points || 0;
-        document.getElementById("currentPoints").textContent = pts + " Points";
-        document.getElementById("progressFill").style.width = Math.min((pts / 1000) * 100, 100) + "%";
-      }
-    } catch (e) { console.log("User not logged in"); }
-  };
-  })(); // <-- Closes the IIFE wrapper from Part 1
+        try {
+            const user = await account.get();
+            const profile = await databases.getDocument(DB_ID, PROFILES_ID, user.$id);
+            if(profile) {
+                const pts = profile.points || 0;
+                const ptsEl = document.getElementById("currentPoints");
+                const progressEl = document.getElementById("progressFill");
+                
+                if(ptsEl) ptsEl.textContent = pts + " Points";
+                if(progressEl) progressEl.style.width = Math.min((pts / 1000) * 100, 100) + "%";
+            }
+        } catch (e) { 
+            console.log("User not logged in"); 
+        }
+    };
+})(); // Closes the IIFE
 </script>
 </body>
 </html>
