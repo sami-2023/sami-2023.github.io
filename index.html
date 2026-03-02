@@ -446,6 +446,7 @@
 <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
 
 <script>
+    (function() {
   // 2. CONFIGURATION
     const sdk = new Appwrite.Client();
     sdk.setEndpoint('https://fra.cloud.appwrite.io/v1').setProject('69930a880011dec1e960');
@@ -995,37 +996,63 @@ if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true')
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    // --- 1. ALWAYS LOAD THE 300x250 BANNER IN THE FEED ---
-    const adId = "5fdf05f4f0a9f7a9dde27a97d34af9b1";
-    container.innerHTML = ""; 
-    const iframe = document.createElement('iframe');
-    iframe.style.width = "300px";
-    iframe.style.height = "250px";
-    iframe.style.border = "none";
-    iframe.setAttribute('scrolling', 'no');
-    container.appendChild(iframe);
+    // --- 1. THE SHUFFLE LOGIC (50/50 Chance) ---
+    const showNative = Math.random() < 0.5;
+    container.innerHTML = ""; // Clear the slot
 
-    setTimeout(() => {
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-        if (!iframeDoc) return;
-        iframeDoc.open();
-        iframeDoc.write(`
-            <body style="margin:0; padding:0; display:flex; justify-content:center; align-items:center; background:transparent;">
-                <script type="text/javascript">
-                    atOptions = { 'key' : '${adId}', 'format' : 'iframe', 'height' : 250, 'width' : 300, 'params' : {} };
-                <\/script>
-                <script type="text/javascript" src="//www.profitabledisplaynetwork.com/${adId}/invoke.js"><\/script>
-            </body>
-        `);
-        iframeDoc.close();
-    }, 100);
+    if (showNative) {
+        // --- OPTION A: NATIVE BANNER ---
+        console.log("Loading Native Banner...");
+        const nativeDivId = "container-9b403edceb2225b444f47ffd72ff2d77";
+        
+        // Create the container div required by the native script
+        const nativeDiv = document.createElement('div');
+        nativeDiv.id = nativeDivId;
+        container.appendChild(nativeDiv);
 
-    // --- 2. ALSO TRIGGER THE SOCIAL BAR (POPUP) ---
-    // This script won't take up space in your feed; it will just pop up in the corner
-    const socialScript = document.createElement('script');
-    socialScript.type = 'text/javascript';
-    socialScript.src = 'https://pl28795888.effectivegatecpm.com/be/7e/f4/be7ef4357e50d4d0e0fc10e3441f9c8d.js';
-    document.body.appendChild(socialScript);
+        // Load the external native script
+        const nativeScript = document.createElement('script');
+        nativeScript.async = "async";
+        nativeScript.setAttribute('data-cfasync', 'false');
+        nativeScript.src = "https://pl28777537.effectivegatecpm.com/9b403edceb2225b444f47ffd72ff2d77/invoke.js";
+        document.body.appendChild(nativeScript);
+
+    } else {
+        // --- OPTION B: 300x250 BANNER ---
+        console.log("Loading 300x250 Banner...");
+        const adId = "5fdf05f4f0a9f7a9dde27a97d34af9b1";
+        const iframe = document.createElement('iframe');
+        iframe.style.width = "300px";
+        iframe.style.height = "250px";
+        iframe.style.border = "none";
+        iframe.setAttribute('scrolling', 'no');
+        container.appendChild(iframe);
+
+        setTimeout(() => {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            if (!iframeDoc) return;
+            iframeDoc.open();
+            iframeDoc.write(`
+                <body style="margin:0; padding:0; display:flex; justify-content:center; align-items:center; background:transparent;">
+                    <script type="text/javascript">
+                        atOptions = { 'key' : '${adId}', 'format' : 'iframe', 'height' : 250, 'width' : 300, 'params' : {} };
+                    <\/script>
+                    <script type="text/javascript" src="//www.profitabledisplaynetwork.com/${adId}/invoke.js"><\/script>
+                </body>
+            `);
+            iframeDoc.close();
+        }, 100);
+    }
+
+    // --- 2. ALWAYS TRIGGER THE SOCIAL BAR (POPUP) ---
+    // We only inject this once per page load to avoid spamming the user
+    if (!document.getElementById('social-bar-script')) {
+        const socialScript = document.createElement('script');
+        socialScript.id = 'social-bar-script';
+        socialScript.type = 'text/javascript';
+        socialScript.src = 'https://pl28795888.effectivegatecpm.com/be/7e/f4/be7ef4357e50d4d0e0fc10e3441f9c8d.js';
+        document.body.appendChild(socialScript);
+    }
 }
   // --- 7. BONUS CLAIM HANDLER ---
     async function handleClaimBonus() {
@@ -1147,7 +1174,9 @@ window.addEventListener('DOMContentLoaded', loadFooterAd);
     // --- 9. FINAL APP START ---
     // This starts everything we've built piece by piece
     init();
-   
+   console.log("Security Shield Active: Global scope is protected.");
+
+})(); // This closing bracket and parenthesis is the lock.
 </script>
 
 </body>
