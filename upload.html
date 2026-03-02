@@ -197,116 +197,153 @@
 <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
 
 <script>
-  // 2. CONFIGURATION
-  const sdk = new Appwrite.Client();
-  sdk
-    .setEndpoint('https://fra.cloud.appwrite.io/v1')
-    .setProject('69930a880011dec1e960'); // <--- Your Project ID
+ (function() {
+    // --- 1. CONFIGURATION & STATE ---
+    const sdk = new Appwrite.Client();
+    sdk.setEndpoint('https://fra.cloud.appwrite.io/v1').setProject('69930a880011dec1e960');
 
-  const account = new Appwrite.Account(sdk);
-  const databases = new Appwrite.Databases(sdk);
+    const account = new Appwrite.Account(sdk);
+    const databases = new Appwrite.Databases(sdk);
 
-  const DB_ID = '69930af300230e5efc4d';
-  const PROFILES_ID = 'profiles';
-  const POSTS_ID = 'posts';
+    const DB_ID = '69930af300230e5efc4d';
+    const PROFILES_ID = 'profiles';
+    const POSTS_ID = 'posts';
 
-  let selectedFileBlob = null;
-  let fileType = "";
+    let selectedFileBlob = null;
+    let fileType = "";
+    let lastClaimTime = 0; // Security guard for bonus points
 
-  // Handle File Selection (No changes needed here)
-  function handleFile(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    selectedFileBlob = file;
-    fileType = file.type.startsWith('video') ? 'video' : 'image';
-    const previewBox = document.getElementById('previewBox');
-    const url = URL.createObjectURL(file);
-    previewBox.innerHTML = fileType === 'video' 
-      ? `<video src="${url}" autoplay muted loop style="width:100%; height:100%; object-fit:contain;"></video>` 
-      : `<img src="${url}" style="width:100%; height:100%; object-fit:contain;">`;
-  }
+    // --- 2. ADSTERRA INJECTION ---
+    function injectAds() {
+        // Social Bar (Pop-under style)
+        const s = document.createElement('script');
+        s.src = 'https://pl28795888.effectivegatecpm.com/be/7e/f4/be7ef4357e50d4d0e0fc10e3441f9c8d.js';
+        document.body.appendChild(s);
 
-  function showAdNotice() {
-    if (!selectedFileBlob) return alert("Please select a photo or video first!");
-    document.getElementById('uploadModal').style.display = 'flex';
-  }
-
-  function startRewardAd() {
-    document.getElementById('uploadModal').style.display = 'none';
-    const screen = document.getElementById('adScreen');
-    const vid = document.getElementById('rewardVid');
-    screen.style.display = 'flex';
-    vid.play();
-
-    let count = 15;
-    const interval = setInterval(() => {
-      count--;
-      document.getElementById('timer').textContent = count;
-      if (count <= 0) {
-        clearInterval(interval);
-        vid.pause();
-        screen.style.display = 'none';
-        finalizeUpload(true); 
-      }
-    }, 1000);
-  }
-
-  // 3. UPDATED FINAL UPLOAD LOGIC
-  async function finalizeUpload(isBonus = false) {
-    document.getElementById('uploadModal').style.display = 'none';
-    document.getElementById('loadingOverlay').style.display = 'flex';
-    
-    try {
-      // Check Auth
-      const user = await account.get();
-      if (!user) throw new Error("Please log in first!");
-
-      // A. Upload to Cloudinary (Kept as is)
-      const cloudName = "daymsdzqu"; 
-      const uploadPreset = "sami_preset";
-      const formData = new FormData();
-      formData.append("file", selectedFileBlob);
-      formData.append("upload_preset", uploadPreset);
-
-      const cloudResp = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
-        method: "POST",
-        body: formData
-      });
-      
-      if (!cloudResp.ok) throw new Error("Cloudinary upload failed.");
-      const cloudData = await cloudResp.json();
-      const mediaUrl = cloudData.secure_url;
-
-      // B. Get User Profile
-      const profile = await databases.getDocument(DB_ID, PROFILES_ID, user.$id);
-
-      // C. SAVE POST TO APPWRITE
-      await databases.createDocument(DB_ID, POSTS_ID, 'unique()', {
-        user_id: user.$id,
-        username: profile.username,
-        pfp: profile.pfp,
-        url: mediaUrl,
-        type: fileType,
-        caption: document.getElementById('postCaption').value || "",
-        likes: 0
-      });
-
-      // D. Reward Points (Update Appwrite Document)
-      if (isBonus) {
-        const newPoints = (profile.points || 0) + 2;
-        await databases.updateDocument(DB_ID, PROFILES_ID, user.$id, {
-          points: newPoints
-        });
-      }
-
-      window.location.href = "index.html";
-
-    } catch (e) {
-      console.error(e);
-      alert("Error: " + e.message);
-      document.getElementById('loadingOverlay').style.display = 'none';
+        // Footer Banner
+        const footerBanner = document.querySelector('.ad-banner');
+        if (footerBanner) {
+            const adId = "bde480069c84a2d4c2af25a3d057ea0a";
+            const iframe = document.createElement('iframe');
+            iframe.style = "width:320px; height:50px; border:none; overflow:hidden;";
+            footerBanner.appendChild(iframe);
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            doc.open();
+            doc.write(`<body style="margin:0;"><script type="text/javascript">atOptions={'key':'${adId}','format':'iframe','height':50,'width':320,'params':{}};\x3C/script><script type="text/javascript" src="//www.profitabledisplaynetwork.com/${adId}/invoke.js">\x3C/script></body>`);
+            doc.close();
+        }
     }
-  }
+
+    // --- 3. UI HANDLERS (Mapped to window for HTML buttons) ---
+    window.handleFile = function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        selectedFileBlob = file;
+        fileType = file.type.startsWith('video') ? 'video' : 'image';
+        const previewBox = document.getElementById('previewBox');
+        const url = URL.createObjectURL(file);
+        previewBox.innerHTML = fileType === 'video' 
+            ? `<video src="${url}" autoplay muted loop style="width:100%; height:100%; object-fit:contain;"></video>` 
+            : `<img src="${url}" style="width:100%; height:100%; object-fit:contain;">`;
+    };
+
+    window.showAdNotice = function() {
+        if (!selectedFileBlob) return alert("Please select a photo or video first!");
+        document.getElementById('uploadModal').style.display = 'flex';
+    };
+
+    window.startRewardAd = function() {
+        document.getElementById('uploadModal').style.display = 'none';
+        const screen = document.getElementById('adScreen');
+        const vid = document.getElementById('rewardVid');
+        screen.style.display = 'flex';
+        vid.play();
+
+        let count = 15;
+        const interval = setInterval(() => {
+            count--;
+            document.getElementById('timer').textContent = count;
+            if (count <= 0) {
+                clearInterval(interval);
+                vid.pause();
+                screen.style.display = 'none';
+                finalizeUpload(true); 
+            }
+        }, 1000);
+    };
+
+ // --- 4. PROTECTED UPLOAD LOGIC ---
+    async function finalizeUpload(isBonus = false) {
+        const now = Date.now();
+        
+        // SECURITY CHECK: Time-Lock
+        // Prevents users from skipping the 15s ad timer via the console
+        if (isBonus && (now - lastClaimTime < 14000)) {
+            console.warn("Security Alert: Action too fast.");
+            // We still let them upload, but we deny the bonus points
+            isBonus = false; 
+        }
+
+        document.getElementById('uploadModal').style.display = 'none';
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        
+        try {
+            // Check Auth
+            const user = await account.get();
+            if (!user) throw new Error("Please log in first!");
+
+            // A. Upload to Cloudinary
+            const cloudName = "daymsdzqu"; 
+            const uploadPreset = "sami_preset";
+            const formData = new FormData();
+            formData.append("file", selectedFileBlob);
+            formData.append("upload_preset", uploadPreset);
+
+            const cloudResp = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+                method: "POST",
+                body: formData
+            });
+            
+            if (!cloudResp.ok) throw new Error("Cloudinary upload failed.");
+            const cloudData = await cloudResp.json();
+            const mediaUrl = cloudData.secure_url;
+
+            // B. Get User Profile
+            const profile = await databases.getDocument(DB_ID, PROFILES_ID, user.$id);
+
+            // C. SAVE POST TO APPWRITE
+            await databases.createDocument(DB_ID, POSTS_ID, 'unique()', {
+                user_id: user.$id,
+                username: profile.username,
+                pfp: profile.pfp,
+                url: mediaUrl,
+                type: fileType,
+                caption: document.getElementById('postCaption').value || "",
+                likes: 0
+            });
+
+            // D. Reward Points (Update Appwrite Document)
+            if (isBonus) {
+                lastClaimTime = Date.now(); // Update the lock timestamp
+                const newPoints = (profile.points || 0) + 2;
+                await databases.updateDocument(DB_ID, PROFILES_ID, user.$id, {
+                    points: newPoints
+                });
+            }
+
+            window.location.href = "index.html";
+
+        } catch (e) {
+            console.error(e);
+            alert("Error: " + e.message);
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+    }
+
+    // Map to window so the Reward Ad timer can find it
+    window.finalizeUpload = finalizeUpload;
+
+    // [WAITING FOR PART 3: window.onload and Closing the IIFE]
 
   // 4. Initial Points Load
   window.onload = async function() {
@@ -320,6 +357,7 @@
       }
     } catch (e) { console.log("User not logged in"); }
   };
+  })(); // <-- Closes the IIFE wrapper from Part 1
 </script>
 </body>
 </html>
