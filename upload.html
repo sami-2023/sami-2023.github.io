@@ -179,10 +179,14 @@
     </div>
   </div>
 
-  <div id="adScreen">
-    <div style="padding:20px; color:white; font-weight:bold;">Ad Playing... <span id="timer">15</span>s</div>
-    <video id="rewardVid" src="https://www.w3schools.com/html/mov_bbb.mp4" style="width:100%; flex-grow:1;"></video>
-  </div>
+ <div id="adScreen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; flex-direction:column; align-items:center; justify-content:center;">
+    <div style="padding:20px; color:white; font-weight:bold; text-align:center;">
+        Ad Playing... <span id="timer">15</span>s
+    </div>
+    
+    <div id="rewardVidContainer" style="width:300px; height:250px; background:#000; display:flex; align-items:center; justify-content:center;">
+        </div>
+</div>
    <div class="ad-banner"><p style="font-size:10px; color:#999;">ADVERTISEMENT</p></div>
 
 
