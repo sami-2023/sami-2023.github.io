@@ -430,7 +430,7 @@ async function submitWithdrawal() {
             await databases.createDocument(DB_ID, WITHDRAWALS_ID, 'unique()', {
                 user_id: currentUser.$id,
                 username: userProfile.username || 'User',
-                amount: String(withdrawAmount), // Store as string to be safe with large numbers
+                amount: withdrawAmount, // Store as string to be safe with large numbers
                 bank_name: bank,
                 account_number: num,
                 account_name: name,
