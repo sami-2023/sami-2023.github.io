@@ -294,6 +294,32 @@
             doc.close();
         }
     }
+    // --- MISSING: DATA LOADING & UI ---
+    async function loadWallet() {
+        // Fetch the user's profile document from Appwrite
+        userProfile = await databases.getDocument(DB_ID, PROFILES_ID, currentUser.$id);
+        userPoints = userProfile.points || 0;
+        currentEarnings = userProfile.referral_earnings || 0;
+        updateWalletDisplay();
+    }
+
+    function updateWalletDisplay() {
+        const totalPointsEl = document.getElementById('totalPoints');
+        const cashValueEl = document.getElementById('cashValue');
+        const refEarningsTextEl = document.getElementById('refEarningsText');
+
+        if (totalPointsEl) totalPointsEl.innerText = `${userPoints.toLocaleString()} Pts`;
+        
+        // 1000 points = $5 (or conversion of your choice)
+        if (cashValueEl) {
+            const dollars = ((userPoints / 1000) * 5).toFixed(2);
+            cashValueEl.innerText = `≈ $${dollars}`;
+        }
+
+        if (refEarningsTextEl) {
+            refEarningsTextEl.innerText = `₦${(currentEarnings || 0).toLocaleString()}`;
+        }
+    }
 
     // --- 3. INITIALIZATION & AUTH CHECK ---
     async function init() {
@@ -315,8 +341,11 @@
             });
 
         } catch (err) {
-            console.log("Not logged in, redirecting...");
-            window.location.href = "login.html";
+            console.error("Init Error:", err);
+            // ONLY redirect if the error is "User not authenticated" (401)
+            if (err.code === 401) {
+                window.location.href = "login.html";
+            }
         }
     }
  // --- 4. WITHDRAWAL ACTIONS (AD-INTEGRATED) ---
