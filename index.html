@@ -604,63 +604,7 @@ if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true')
         }
     }
 
-    // 5. BONUS CLAIM HANDLER
-    async function handleClaimBonus() {
-        const phoneValue = document.getElementById('phoneInput').value.trim();
-        const networkValue = document.getElementById('networkSelect').value;
-
-        if (!phoneValue || !networkValue) {
-            alert("Please fill all fields");
-            return;
-        }
-        
-        // Simple Nigerian phone number validation
-        if (phoneValue.length < 11) {
-            alert("Please enter a valid 11-digit phone number");
-            return;
-        }
-
-        try {
-            // Try to update the profile first
-            await databases.updateDocument(DB_ID, PROFILES_ID, currentUser.$id, {
-                phone_number: phoneValue,
-                network: networkValue
-            });
-            
-            // ALSO: Create a record in a "withdrawals" collection so you know who to pay!
-            // If you haven't created this collection yet, you can comment this out.
-            try {
-                await databases.createDocument(DB_ID, 'withdrawals', 'unique()', {
-                    user_id: currentUser.$id,
-                    phone: phoneValue,
-                    network: networkValue,
-                    amount: 100,
-                    status: "pending",
-                    type: "signup_bonus"
-                });
-            } catch (e) { console.log("Withdrawal log failed, but profile updated."); }
-
-            finalizeClaim();
-
-        } catch (error) {
-            // If the profile document doesn't exist yet (Error 404), create it
-            if (error.code === 404) {
-                try {
-                    await databases.createDocument(DB_ID, PROFILES_ID, currentUser.$id, {
-                        phone_number: phoneValue,
-                        network: networkValue,
-                        points: 0 
-                    });
-                    finalizeClaim();
-                } catch (createErr) {
-                    alert("Account Sync Error: " + createErr.message);
-                }
-            } else {
-                alert("Update Error: " + error.message);
-            }
-        }
-    }
-
+   
     function finalizeClaim() {
         alert("Bonus Claimed! Your ₦100 Airtime will be sent to " + document.getElementById('phoneInput').value + " shortly.");
         document.getElementById('airtimePopup').style.display = 'none';
@@ -1171,6 +1115,15 @@ window.addEventListener('DOMContentLoaded', loadFooterAd);
         }
     }
 };
+// --- EXPOSE TO GLOBAL SCOPE ---
+    window.handleClaimBonus = handleClaimBonus; // <--- Add this line
+    window.handleLike = handleLike; 
+    window.openComments = openComments;
+    window.closeComments = closeComments;
+    window.submitComment = submitComment;
+    window.togglePostSound = togglePostSound;
+
+    
     // --- 9. FINAL APP START ---
     // This starts everything we've built piece by piece
     init();
