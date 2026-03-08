@@ -459,15 +459,19 @@ async function submitWithdrawal() {
         if (!historyList) return;
 
         try {
+            // Fetch both Bank Withdrawals and Airtime/Sign-up Bonuses
             const [bankRes, airtimeRes] = await Promise.all([
                 databases.listDocuments(DB_ID, WITHDRAWALS_ID, [
-                    Appwrite.Query.equal('user_id', currentUser.$id)
+                    Appwrite.Query.equal('user_id', currentUser.$id),
+                    Appwrite.Query.orderDesc('$createdAt')
                 ]),
                 databases.listDocuments(DB_ID, AIRTIME_ID, [
-                    Appwrite.Query.equal('user_id', currentUser.$id)
+                    Appwrite.Query.equal('user_id', currentUser.$id),
+                    Appwrite.Query.orderDesc('$createdAt')
                 ])
             ]);
 
+            // Combine both into one list and sort by newest first
             const allLogs = [...bankRes.documents, ...airtimeRes.documents].sort((a, b) => 
                 new Date(b.$createdAt) - new Date(a.$createdAt)
             );
@@ -478,27 +482,38 @@ async function submitWithdrawal() {
             }
 
             historyList.innerHTML = allLogs.map(item => {
+                // Determine if it's Airtime or Bank based on attributes
                 const isAirtime = item.phone_number !== undefined; 
-                const isPaid = item.status === 'Paid' || item.status === 'completed';
-                const statusColor = isPaid ? '#26ff00' : '#ffaa00';
-                const statusIcon = isPaid ? 'fa-check-circle' : 'fa-clock';
+                const status = item.status ? item.status.toLowerCase() : 'pending';
+                
+                // Color coding based on status
+                let statusColor = '#ffaa00'; // Default orange (pending)
+                let statusIcon = 'fa-clock';
+                
+                if (status === 'paid' || status === 'completed' || status === 'success') {
+                    statusColor = '#26ff00'; // Green
+                    statusIcon = 'fa-check-circle';
+                } else if (status === 'failed' || status === 'rejected') {
+                    statusColor = '#ff0000'; // Red
+                    statusIcon = 'fa-circle-xmark';
+                }
 
                 return `
                   <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:15px; border-radius:12px; margin-bottom:10px; border-left: 5px solid ${statusColor}; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
                     <div style="display:flex; align-items:center;">
-                       <i class="fa-solid ${isAirtime ? 'fa-gift' : 'fa-university'}" style="margin-right:12px; color:#ff0a00; font-size:18px;"></i>
-                       <div>
-                          <p style="font-weight:bold; margin:0; font-size:14px;">
+                        <i class="fa-solid ${isAirtime ? 'fa-mobile-screen-button' : 'fa-university'}" style="margin-right:12px; color:#ff0a00; font-size:18px;"></i>
+                        <div>
+                          <p style="font-weight:bold; margin:0; font-size:14px; color:#333;">
                             ${isAirtime ? 'Sign-up Airtime Bonus' : 'Bank Withdrawal'}
                           </p>
                           <p style="font-size:11px; color:${statusColor}; margin:0; font-weight:bold;">
-                            <i class="fa-solid ${statusIcon}"></i> ${item.status.toUpperCase()}
+                            <i class="fa-solid ${statusIcon}"></i> ${status.toUpperCase()}
                           </p>
-                       </div>
+                        </div>
                     </div>
                     <div style="text-align:right;">
                       <p style="font-weight:bold; margin:0; color:#333;">
-                        ${isAirtime ? 'FREE' : '₦' + item.amount}
+                        ${isAirtime ? 'AIRTIME' : '₦' + item.amount}
                       </p>
                       <p style="font-size:10px; color:#aaa;">${new Date(item.$createdAt).toLocaleDateString()}</p>
                     </div>
@@ -507,7 +522,7 @@ async function submitWithdrawal() {
             }).join('');
         } catch (e) {
             console.error("History error:", e);
-            historyList.innerHTML = "<p style='text-align:center; color:red;'>Check console for error details.</p>";
+            historyList.innerHTML = "<p style='text-align:center; color:red;'>Could not load history.</p>";
         }
     }
 
