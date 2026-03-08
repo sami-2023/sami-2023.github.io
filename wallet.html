@@ -295,13 +295,17 @@
             doc.close();
         }
     }
-    // --- MISSING: DATA LOADING & UI ---
+
+    // --- 3. DATA LOADING & UI UPDATES ---
     async function loadWallet() {
-        // Fetch the user's profile document from Appwrite
-        userProfile = await databases.getDocument(DB_ID, PROFILES_ID, currentUser.$id);
-        userPoints = userProfile.points || 0;
-        currentEarnings = userProfile.referral_earnings || 0;
-        updateWalletDisplay();
+        try {
+            userProfile = await databases.getDocument(DB_ID, PROFILES_ID, currentUser.$id);
+            userPoints = userProfile.points || 0;
+            currentEarnings = userProfile.referral_earnings || 0;
+            updateWalletDisplay();
+        } catch (e) {
+            console.error("Wallet Load Error:", e);
+        }
     }
 
     function updateWalletDisplay() {
@@ -311,7 +315,6 @@
 
         if (totalPointsEl) totalPointsEl.innerText = `${userPoints.toLocaleString()} Pts`;
         
-        // 1000 points = $5 (or conversion of your choice)
         if (cashValueEl) {
             const dollars = ((userPoints / 1000) * 5).toFixed(2);
             cashValueEl.innerText = `≈ $${dollars}`;
@@ -322,63 +325,31 @@
         }
     }
 
-    // --- 3. INITIALIZATION & AUTH CHECK ---
-    async function init() {
-        try {
-            currentUser = await account.get();
-            
-            // Load Ads and Data
-            injectFooterAd();
-            await loadWallet();
-            await loadEarningHistory();
-
-            // Appwrite Real-time Listeners
-            sdk.subscribe(`databases.${DB_ID}.collections.${PROFILES_ID}.documents.${currentUser.$id}`, response => {
-                if (response.events.includes("databases.*.updated")) {
-                    userPoints = response.payload.points;
-                    currentEarnings = response.payload.referral_earnings;
-                    updateWalletDisplay();
-                }
-            });
-
-        } catch (err) {
-            console.error("Init Error:", err);
-            // ONLY redirect if the error is "User not authenticated" (401)
-            if (err.code === 401) {
-                window.location.href = "login.html";
-            }
-        }
-    }
- // --- 4. WITHDRAWAL ACTIONS (AD-INTEGRATED) ---
-
-    // This handles the Referral Withdrawal + Direct Link
-    // --- 4. WITHDRAWAL ACTIONS (AD-INTEGRATED) ---
-
+    // --- 4. WITHDRAWAL TRIGGER (Timer & Validation) ---
     async function requestWithdrawal(type = 'referral') {
-        // 1. Validation Logic based on button clicked
+        // Validation logic
         if (type === 'points') {
             if (userPoints < 1000) {
                 alert("You need at least 1,000 Points to withdraw.");
                 return;
             }
         } else {
-            // Default to referral check
-            if (currentEarnings < 100) {
+            if (currentEarnings < 100) { 
                 alert("You need at least ₦100 in Referral Earnings to withdraw cash.");
                 return;
             }
         }
 
-        // 2. Open Adsterra Direct Link in new tab
+        // Open Direct Link
         window.open(DIRECT_LINK, '_blank');
 
-        // 3. Show the "Verifying" screen with the 15s timer
+        // Show Verifying Screen
         const screen = document.getElementById('adScreen');
         const timerEl = document.getElementById('timer');
         if (screen) screen.style.display = 'flex';
 
         let count = 15;
-        if (timerEl) timerEl.textContent = count; // Reset timer text
+        if (timerEl) timerEl.textContent = count;
 
         const countdown = setInterval(() => {
             count--;
@@ -388,30 +359,77 @@
                 clearInterval(countdown);
                 if (screen) screen.style.display = 'none';
                 
-                // Both types now open the same Bank Modal
-                document.getElementById('withdrawModal').style.display = 'flex';
-                
-                // We store the "type" on the modal so the submit function knows what to do
-                document.getElementById('withdrawModal').dataset.withdrawalType = type;
-                // 4. Show the correct modal or alert after ad
                 if (type === 'points') {
-                    // Logic for points (e.g., converting to airtime or specific modal)
                     alert("Points Verified! Opening Points Withdrawal Form...");
-                    // If you have a separate modal for points, show it here
-                } else {
-                    document.getElementById('withdrawModal').style.display = 'flex';
+                }
+                
+                const modal = document.getElementById('withdrawModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    // We save the type in a 'dataset' so Part 2 knows what to deduct
+                    modal.dataset.withdrawalType = type;
                 }
             }
         }, 1000);
     }
-async function submitWithdrawal() {
+
+    // --- 4. WITHDRAWAL ACTIONS (AD-INTEGRATED) ---
+    async function requestWithdrawal(type = 'referral') {
+        // 1. Validation Logic
+        if (type === 'points') {
+            if (userPoints < 1000) {
+                alert("You need at least 1,000 Points to withdraw.");
+                return;
+            }
+        } else {
+            if (currentEarnings < 100) {
+                alert("You need at least ₦100 in Referral Earnings to withdraw cash.");
+                return;
+            }
+        }
+
+        // 2. Open Adsterra Direct Link
+        window.open(DIRECT_LINK, '_blank');
+
+        // 3. Show the "Verifying" screen
+        const screen = document.getElementById('adScreen');
+        const timerEl = document.getElementById('timer');
+        if (screen) screen.style.display = 'flex';
+
+        let count = 15;
+        if (timerEl) timerEl.textContent = count;
+
+        const countdown = setInterval(() => {
+            count--;
+            if (timerEl) timerEl.textContent = count;
+            
+            if (count <= 0) {
+                clearInterval(countdown);
+                if (screen) screen.style.display = 'none';
+                
+                // Show the modal and store the type
+                const modal = document.getElementById('withdrawModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    modal.dataset.withdrawalType = type;
+                }
+                
+                // 4. Specific alert for Points
+                if (type === 'points') {
+                    alert("Points Verified! Opening Points Withdrawal Form...");
+                }
+            }
+        }, 1000);
+    }
+
+    async function submitWithdrawal() {
         const bank = document.getElementById('bankName').value;
         const num = document.getElementById('accNumber').value;
         const name = document.getElementById('accName').value;
         const btn = document.getElementById('withdrawBtn');
         
-        // Get the type we stored earlier (points or referral)
-        const type = document.getElementById('withdrawModal').dataset.withdrawalType;
+        const modal = document.getElementById('withdrawModal');
+        const type = modal.dataset.withdrawalType;
 
         if (!bank || !num || !name) {
             alert("Please fill all bank details.");
@@ -421,21 +439,24 @@ async function submitWithdrawal() {
         btn.disabled = true;
         btn.innerText = "Processing...";
 
-        // Decide how much to withdraw and what to reset
-        let withdrawAmount = (type === 'points') ? userPoints : currentEarnings;
+        // Ensure we are sending a clean Integer to Appwrite
+        let rawAmount = (type === 'points') ? userPoints : currentEarnings;
+        let withdrawAmount = Math.floor(Number(rawAmount));
+        
         let updateData = (type === 'points') ? { points: 0 } : { referral_earnings: 0 };
 
         try {
             // 1. Create the request in Appwrite
+            // IMPORTANT: Ensure attributes 'username' and 'type' exist in your collection
             await databases.createDocument(DB_ID, WITHDRAWALS_ID, 'unique()', {
                 user_id: currentUser.$id,
                 username: userProfile.username || 'User',
-                amount: withdrawAmount, // Store as string to be safe with large numbers
+                amount: withdrawAmount, 
                 bank_name: bank,
                 account_number: num,
                 account_name: name,
                 status: 'pending',
-                type: type, // Helpful to see in Appwrite if it was points or referral
+                type: type, 
                 created_at: new Date().toISOString()
             });
 
@@ -443,16 +464,25 @@ async function submitWithdrawal() {
             await databases.updateDocument(DB_ID, PROFILES_ID, currentUser.$id, updateData);
 
             // 3. UI Cleanup
-            document.getElementById('withdrawModal').style.display = 'none';
+            modal.style.display = 'none';
             document.getElementById('successOverlay').style.display = 'flex';
 
         } catch (err) {
-            console.error(err);
+            console.error("Submission Error:", err);
             alert("Error: " + err.message);
             btn.disabled = false;
             btn.innerText = "SUBMIT REQUEST";
         }
     }
+
+    // --- 5. GLOBAL EXPOSURE ---
+    // This makes the functions clickable from your HTML buttons
+    window.requestWithdrawal = requestWithdrawal;
+    window.submitWithdrawal = submitWithdrawal;
+    window.closeWithdrawModal = () => {
+        document.getElementById('withdrawModal').style.display = 'none';
+    };
+
     // --- 5. EARNING HISTORY ---
     async function loadEarningHistory() {
         const historyList = document.getElementById("historyList");
@@ -483,6 +513,7 @@ async function submitWithdrawal() {
 
             historyList.innerHTML = allLogs.map(item => {
                 // Determine if it's Airtime or Bank based on attributes
+                // We check phone_number to identify airtime documents
                 const isAirtime = item.phone_number !== undefined; 
                 const status = item.status ? item.status.toLowerCase() : 'pending';
                 
@@ -513,7 +544,7 @@ async function submitWithdrawal() {
                     </div>
                     <div style="text-align:right;">
                       <p style="font-weight:bold; margin:0; color:#333;">
-                        ${isAirtime ? 'AIRTIME' : '₦' + item.amount}
+                        ${isAirtime ? 'AIRTIME' : '₦' + (item.amount || 0).toLocaleString()}
                       </p>
                       <p style="font-size:10px; color:#aaa;">${new Date(item.$createdAt).toLocaleDateString()}</p>
                     </div>
@@ -526,16 +557,20 @@ async function submitWithdrawal() {
         }
     }
 
-    // Expose functions to window for HTML buttons
+    // --- 6. GLOBAL EXPOSURE & EXECUTION ---
+    
+    // Expose functions to window so they work with onclick="..." in HTML
     window.requestWithdrawal = requestWithdrawal;
     window.submitWithdrawal = submitWithdrawal;
     window.closeWithdrawModal = function() {
-    document.getElementById('withdrawModal').style.display = 'none';
-};
+        const modal = document.getElementById('withdrawModal');
+        if (modal) modal.style.display = 'none';
+    };
 
-    // Run Init
+    // Run the initialization function
     init();
-})(); // End IIFE
+
+})(); // End of the IIFE
 </script>
 </body>
 </html>
