@@ -347,21 +347,22 @@
   let pressTimer;
   let currentUser = null;
 
- async function initProfile() {
+async function initProfile() {
     try {
-        currentUser = await account.get(); // The person currently logged in
+        currentUser = await account.get();
         
         const urlParams = new URLSearchParams(window.location.search);
         const viewUserId = urlParams.get('id');
         
-        // If there's an ID in the URL and it's NOT mine, I am a GUEST
         const isOwner = !viewUserId || viewUserId === currentUser.$id;
         const targetId = viewUserId || currentUser.$id;
 
-        // Hide or Show UI elements based on ownership
         setupProfileUI(isOwner);
-        
         loadProfileData(targetId);
+
+        // ADD THIS LINE HERE:
+        injectFooterAd();
+
     } catch (err) {
         window.location.href = "signup.html";
     }
@@ -566,6 +567,20 @@ async function confirmDeleteAccount() {
             // Force logout anyway
             logoutUser();
         }
+    }
+}
+function injectFooterAd() {
+    const footerBanner = document.querySelector('.ad-banner');
+    if (footerBanner) {
+        footerBanner.innerHTML = ""; 
+        const iframe = document.createElement('iframe');
+        iframe.style = "width:320px; height:50px; border:none; overflow:hidden;";
+        iframe.setAttribute('scrolling', 'no');
+        footerBanner.appendChild(iframe);
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write(`<body style="margin:0;"><script type="text/javascript">atOptions={'key':'bde480069c84a2d4c2af25a3d057ea0a','format':'iframe','height':50,'width':320,'params':{}};</script><script type="text/javascript" src="//www.profitabledisplaynetwork.com/bde480069c84a2d4c2af25a3d057ea0a/invoke.js"></script></body>`);
+        doc.close();
     }
 }
 
