@@ -341,6 +341,9 @@
   const PROFILES_ID = 'profiles';
   const POSTS_ID = 'posts';
   const BUCKET_ID = 'avatars'; // The ID of your storage bucket in Appwrite
+    // ADSTERRA ASSETS
+    const DIRECT_LINK = "https://www.effectivegatecpm.com/tzvwi0sdq?key=a8c9d79d97c614601f79e7efe3bf87bf";
+    const FOOTER_ID = "bde480069c84a2d4c2af25a3d057ea0a";
 
   let userPosts = [];
   let postToDelete = null;
@@ -569,20 +572,30 @@ async function confirmDeleteAccount() {
         }
     }
 }
-function injectFooterAd() {
-    const footerBanner = document.querySelector('.ad-banner');
-    if (footerBanner) {
-        footerBanner.innerHTML = ""; 
-        const iframe = document.createElement('iframe');
-        iframe.style = "width:320px; height:50px; border:none; overflow:hidden;";
-        iframe.setAttribute('scrolling', 'no');
-        footerBanner.appendChild(iframe);
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-        doc.open();
-        doc.write(`<body style="margin:0;"><script type="text/javascript">atOptions={'key':'bde480069c84a2d4c2af25a3d057ea0a','format':'iframe','height':50,'width':320,'params':{}};</script><script type="text/javascript" src="//www.profitabledisplaynetwork.com/bde480069c84a2d4c2af25a3d057ea0a/invoke.js"><\/script></body>`);
-        doc.close();
+ // --- 2. STATIC AD INJECTION (Footer Banner) ---
+    function injectFooterAd() {
+        const footerBanner = document.querySelector('.ad-banner');
+        if (footerBanner) {
+            footerBanner.innerHTML = ""; 
+            const iframe = document.createElement('iframe');
+            iframe.style = "width:320px; height:50px; border:none; overflow:hidden;";
+            iframe.setAttribute('scrolling', 'no');
+            footerBanner.appendChild(iframe);
+            
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            doc.open();
+            doc.write(`
+                <body style="margin:0;">
+                    <script type="text/javascript">
+                        atOptions = { 'key' : '${FOOTER_ID}', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };
+                    <\/script>
+                    <script type="text/javascript" src="//www.profitabledisplaynetwork.com/${FOOTER_ID}/invoke.js"><\/script>
+                </body>
+            `);
+            doc.close();
+        }
     }
-}
+
 
   // --- REFERRAL & LOGOUT ---
   async function openReferralModal() {
