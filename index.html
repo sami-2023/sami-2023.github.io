@@ -520,13 +520,31 @@ if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true')
 }
 
     // 5. LOAD APP CONTENT (Only reached if verified)
-    try {
-        const response = await databases.listDocuments(DB_ID, POSTS_ID);
-        cachedPosts = response.documents;
-        cachedPosts.sort(() => Math.random() - 0.5);
-    } catch (err) {
-        console.error("Fetch error:", err);
-    }
+   try {
+    const response = await databases.listDocuments(DB_ID, POSTS_ID);
+    let allPosts = response.documents;
+
+    // 1. Find the user's most recent post
+    const userPosts = allPosts
+        .filter(p => p.user_id === currentUser.$id)
+        .sort((a, b) => new Date(b.$createdAt) - new Date(a.$createdAt));
+    
+    const latestUserPost = userPosts[0];
+
+    // 2. Remove that specific post from the main pool so it doesn't appear twice
+    let otherPosts = latestUserPost 
+        ? allPosts.filter(p => p.$id !== latestUserPost.$id) 
+        : allPosts;
+
+    // 3. Shuffle only the "other" posts
+    otherPosts.sort(() => Math.random() - 0.5);
+
+    // 4. Combine: User's newest post goes first, followed by the shuffled rest
+    cachedPosts = latestUserPost ? [latestUserPost, ...otherPosts] : otherPosts;
+
+} catch (err) {
+    console.error("Fetch error:", err);
+}
 
     loadProfile();
     renderFeed();
