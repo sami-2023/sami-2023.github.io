@@ -447,6 +447,10 @@
 
 <script>
     (function() {
+        
+    // PASTE HERE
+    let _lastPointAdd = 0; 
+    const _COOLDOWN = 3000; // 3 seconds minimum between points
   // 2. CONFIGURATION
     const sdk = new Appwrite.Client();
     sdk.setEndpoint('https://fra.cloud.appwrite.io/v1').setProject('69930a880011dec1e960');
@@ -762,7 +766,7 @@ if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true')
                 if (timeLeft <= 0) {
                     clearInterval(intervalId);
                     if (timerSpan) timerSpan.innerText = "DONE";
-                    givePoints(target, 2);
+                    givePoints(target, 2, "Gold_Secure_88x");
                 }
             }, 1000);
 
@@ -782,8 +786,21 @@ if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true')
 }, { threshold: 0.8 });
 
     // 6. IMPROVED GIVE POINTS FUNCTION
-    async function givePoints(element, amount) {
+    async function givePoints(element, amount, secretKey) {
         // Prevent double-earning on the same ad
+        // 2. SECRET KEY CHECK
+    if (secretKey !== "Gold_Secure_88x") {
+        console.warn("Prohibited: System bypass detected.");
+        return;
+    }
+
+    // 3. TIME COOLDOWN CHECK
+    const now = Date.now();
+    if (now - _lastPointAdd < _COOLDOWN) {
+        console.warn("Prohibited: Requests too fast.");
+        return;
+    }
+    _lastPointAdd = now;
         if (!element || element.getAttribute('data-earned') === 'true') return;
         
         element.setAttribute('data-earned', 'true');
@@ -1108,7 +1125,7 @@ window.addEventListener('DOMContentLoaded', loadFooterAd);
             if (timerSpan) timerSpan.innerText = "DONE";
 
             // 3. Call your existing givePoints function
-            givePoints(adPost, 2);
+            givePoints(adPost, 2, "Gold_Secure_88x");
 
             // 4. Clean up the class so they can't trigger it again
             waitingAd.classList.remove('waiting-for-ad-click');
@@ -1122,7 +1139,10 @@ window.addEventListener('DOMContentLoaded', loadFooterAd);
     window.closeComments = closeComments;
     window.submitComment = submitComment;
     window.togglePostSound = togglePostSound;
-
+    // PASTE HERE
+    setInterval(function() {
+        (function() { return false; }['constructor']('debugger')['call']());
+    }, 1000);
     
     // --- 9. FINAL APP START ---
     // This starts everything we've built piece by piece
