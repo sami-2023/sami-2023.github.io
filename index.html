@@ -882,6 +882,27 @@ if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true')
             icon.style.color = video.muted ? "white" : "#26ff00";
         }
     }
+    // 1. Create the Observer
+const videoObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        const video = entry.target;
+
+        // If the video is NOT intersecting (scrolled past/away)
+        if (!entry.isIntersecting) {
+            video.pause();
+        } else {
+            // Optional: Auto-play when it comes back into view
+            // video.play().catch(err => console.log("Autoplay blocked"));
+        }
+    });
+}, {
+    threshold: 0.5 // Triggers when 50% of the video is off-screen
+});
+
+// 2. Tell the observer to watch all video elements
+document.querySelectorAll('video').forEach(vid => {
+    videoObserver.observe(vid);
+});
   // 8. COMMENT SYSTEM (OPEN/LOAD/SUBMIT)
     let activePostId = null; // Track which post is being commented on
 
