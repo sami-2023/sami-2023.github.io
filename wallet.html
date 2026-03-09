@@ -514,7 +514,7 @@
             historyList.innerHTML = allLogs.map(item => {
                 // Determine if it's Airtime or Bank based on attributes
                 // We check phone_number to identify airtime documents
-                const isAirtime = item.phone_number !== undefined; 
+                const isAirtime = item.phone_number !== undefined || item.$collectionId === AIRTIME_ID; 
                 const status = item.status ? item.status.toLowerCase() : 'pending';
                 
                 // Color coding based on status
@@ -557,17 +557,38 @@
         }
     }
 
-    // --- 6. GLOBAL EXPOSURE & EXECUTION ---
-    
-    // Expose functions to window so they work with onclick="..." in HTML
+   // --- 6. GLOBAL EXPOSURE ---
+    // This makes the functions clickable from your HTML buttons
     window.requestWithdrawal = requestWithdrawal;
     window.submitWithdrawal = submitWithdrawal;
-    window.closeWithdrawModal = function() {
+    window.closeWithdrawModal = () => {
         const modal = document.getElementById('withdrawModal');
         if (modal) modal.style.display = 'none';
     };
 
-    // Run the initialization function
+    // --- 7. INITIALIZATION ---
+    async function init() {
+        try {
+            // Check if user is logged in
+            currentUser = await account.get();
+            
+            // 1. Load the balance data
+            await loadWallet();
+            
+            // 2. Load the history list
+            await loadEarningHistory();
+            
+            // 3. Inject ads
+            injectFooterAd();
+            
+        } catch (error) {
+            console.error("Init Error:", error);
+            // Redirect to login if not authenticated
+            // window.location.href = 'login.html'; 
+        }
+    }
+
+    // Start the app
     init();
 
 })(); // End of the IIFE
