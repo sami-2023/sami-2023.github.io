@@ -579,7 +579,7 @@ function injectFooterAd() {
         footerBanner.appendChild(iframe);
         const doc = iframe.contentDocument || iframe.contentWindow.document;
         doc.open();
-        doc.write(`<body style="margin:0;"><script type="text/javascript">atOptions={'key':'bde480069c84a2d4c2af25a3d057ea0a','format':'iframe','height':50,'width':320,'params':{}};</script><script type="text/javascript" src="//www.profitabledisplaynetwork.com/bde480069c84a2d4c2af25a3d057ea0a/invoke.js"></script></body>`);
+        doc.write(`<body style="margin:0;"><script type="text/javascript">atOptions={'key':'bde480069c84a2d4c2af25a3d057ea0a','format':'iframe','height':50,'width':320,'params':{}};</script><script type="text/javascript" src="//www.profitabledisplaynetwork.com/bde480069c84a2d4c2af25a3d057ea0a/invoke.js"><\/script></body>`);
         doc.close();
     }
 }
