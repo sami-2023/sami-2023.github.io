@@ -725,6 +725,10 @@ if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true')
             });
 
             grid.innerHTML = html;
+            // This makes sure the observer sees the videos AFTER they are added to the HTML
+    document.querySelectorAll('.user-video').forEach(vid => {
+        videoObserver.observe(vid);
+    });
 
             // 2. ACTIVATE ADS: Loop through all newly created ad containers
             document.querySelectorAll('[id^="ad-provider-container-"]').forEach(div => {
@@ -892,27 +896,30 @@ if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true')
             icon.style.color = video.muted ? "white" : "#26ff00";
         }
     }
-    // 1. Create the Observer
+    // 1. Create the Video Observer
 const videoObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         const video = entry.target;
 
-        // If the video is NOT intersecting (scrolled past/away)
         if (!entry.isIntersecting) {
+            // SCROLLED AWAY: Stop the video
             video.pause();
         } else {
-            // Optional: Auto-play when it comes back into view
-            // video.play().catch(err => console.log("Autoplay blocked"));
+            // SCROLLED INTO VIEW: Play the video
+            // We use .catch() because browsers often block auto-play with sound
+            video.play().catch(() => {
+                console.log("Autoplay waiting for user interaction...");
+            });
         }
     });
 }, {
-    threshold: 0.5 // Triggers when 50% of the video is off-screen
+    threshold: 0.3 // Triggers when at least 70% of the video is off-screen
 });
 
-// 2. Tell the observer to watch all video elements
-document.querySelectorAll('video').forEach(vid => {
-    videoObserver.observe(vid);
-});
+// 2. UPDATED RENDER FUNCTION (Add the observer here)
+// Inside your existing renderFeed() function, find the end of the try block 
+// and add the line to observe videos.
+
   // 8. COMMENT SYSTEM (OPEN/LOAD/SUBMIT)
     let activePostId = null; // Track which post is being commented on
 
