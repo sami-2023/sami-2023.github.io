@@ -65,10 +65,7 @@
 </div>
 
 
-<script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
-
 <script>
-  // 1. Initialize Appwrite
   const sdk = new Appwrite.Client();
   sdk
     .setEndpoint('https://fra.cloud.appwrite.io/v1') 
@@ -81,7 +78,6 @@
   const PROFILES_ID = 'profiles';
   const REFERRALS_ID = 'referrals';
 
-  // Capture referral code from URL
   const urlParams = new URLSearchParams(window.location.search);
   const referrerUsername = urlParams.get('ref');
 
@@ -100,53 +96,42 @@
     btn.disabled = true;
 
     try {
-        // 1. Create the Auth Account
         const userAccount = await account.create('unique()', email, password, username);
-
-        // 2. Log them in
         await account.createEmailSession(email, password);
-
-        // 3. Send Verification
         await account.createVerification('https://sami-2023.github.io/samiAppwrite/index.html');
 
-        // --- REFERRAL SEARCH START ---
-        let inviterId = null;
+        // --- STEP 4: CREATE PROFILE ---
+        // We add 'referral_earnings' here. 
+        // IMPORTANT: You MUST add this attribute in Appwrite Console first!
+        await databases.createDocument(DB_ID, PROFILES_ID, userAccount.$id, {
+            username: username,
+            points: 0,
+            referral_earnings: 0, 
+            referred_by: referrerUsername || "none",
+            hasClaimedBonus: false 
+        });
+
         if (referrerUsername && referrerUsername !== "none") {
             try {
-                // Find the ID of the person who owns this username
                 const referrerDoc = await databases.listDocuments(DB_ID, PROFILES_ID, [
                     Appwrite.Query.equal('username', referrerUsername)
                 ]);
 
                 if (referrerDoc.documents.length > 0) {
-                    inviterId = referrerDoc.documents[0].$id; // Get their actual ID
+                    const refUser = referrerDoc.documents[0];
+                    await databases.createDocument(DB_ID, REFERRALS_ID, 'unique()', {
+                        referrer_id: refUser.$id,
+                        referred_user_id: userAccount.$id,
+                        status: 'pending',
+                        reward_amount: 100
+                    });
                 }
             } catch (refErr) {
-                console.error("Could not find referrer:", refErr);
+                console.error("Referral record failed:", refErr);
             }
         }
-        // --- REFERRAL SEARCH END ---
 
-        // 4. Create the Profile Document
-        await databases.createDocument(DB_ID, PROFILES_ID, userAccount.$id, {
-            username: username || "New User",
-            points: 0,
-            referral_earnings: 0, // Initialize this!
-            referred_by: inviterId, // Changed to camelCase to match the givePoints script
-            hasClaimedBonus: false 
-        });
-
-        // 5. Keep your Referrals Collection record if you want a history
-        if (inviterId) {
-            await databases.createDocument(DB_ID, REFERRALS_ID, 'unique()', {
-                referrer_id: inviterId,
-                referred_user_id: userAccount.$id,
-                status: 'pending',
-                reward_amount: 100
-            });
-        }
-
-        alert("Account Created! Check Gmail to verify and claim your ₦100 bonus.");
+        alert("Account Created! Please check your Gmail to verify.");
         window.location.href = "index.html?needsVerification=true";
 
     } catch (err) {
