@@ -494,7 +494,7 @@
             // Clean the URL so the secret is gone, and show success
            // To this (to stay inside your folder):
 window.history.replaceState({}, document.title, "/samiAppwrite/index.html?verified=true");
-            alert("✓ Gmail Verified! You can now claim your ₦100 bonus.");
+            alert("✓ Gmail Verified! You can now claim your ₦200 bonus.");
         } catch (err) {
             console.error("Verification error:", err.message);
         }
@@ -644,7 +644,7 @@ if (isNewOrVerified && currentUser.emailVerification) {
 
    
     function finalizeClaim() {
-        alert("Bonus Claimed! Your ₦100 Airtime will be sent to " + document.getElementById('phoneInput').value + " shortly.");
+        alert("Bonus Claimed! Your ₦200 Airtime will be sent to " + document.getElementById('phoneInput').value + " shortly.");
         document.getElementById('airtimePopup').style.display = 'none';
         // Remove the ?newuser=true from URL so popup doesn't come back on refresh
         window.history.replaceState({}, document.title, "index.html");
