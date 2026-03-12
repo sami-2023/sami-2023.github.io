@@ -520,12 +520,18 @@ window.history.replaceState({}, document.title, "/samiAppwrite/index.html?verifi
         return; // Stops the feed and ads from loading
     }
 
-   // 4. SHOW BONUS: Check for both 'newuser' OR 'verified' tags
-if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true') {
-    // Check if user is verified AND hasn't claimed yet
-    if (currentUser.emailVerification && !currentUser.hasClaimedBonus) {
-        const popup = document.getElementById('airtimePopup');
-        if (popup) popup.style.display = 'flex';
+  // 4. SHOW BONUS: Check URL and Database state
+const isNewOrVerified = urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true';
+
+if (isNewOrVerified && currentUser.emailVerification) {
+    try {
+        const profile = await databases.getDocument(DB_ID, PROFILES_ID, currentUser.$id);
+        if (!profile.hasClaimedBonus) {
+            const popup = document.getElementById('airtimePopup');
+            if (popup) popup.style.display = 'flex';
+        }
+    } catch (err) {
+        console.error("Error checking claim status:", err);
     }
 }
 
@@ -817,35 +823,59 @@ if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true')
     });
 }, { threshold: 0.8 });
 
-    // 6. IMPROVED GIVE POINTS FUNCTION
+// 6. IMPROVED GIVE POINTS FUNCTION (With Referral Rewards)
     async function givePoints(element, amount, secretKey) {
-        // Prevent double-earning on the same ad
         // 2. SECRET KEY CHECK
-    if (secretKey !== "Gold_Secure_88x") {
-        console.warn("Prohibited: System bypass detected.");
-        return;
-    }
+        if (secretKey !== "Gold_Secure_88x") {
+            console.warn("Prohibited: System bypass detected.");
+            return;
+        }
 
-    // 3. TIME COOLDOWN CHECK
-    const now = Date.now();
-    if (now - _lastPointAdd < _COOLDOWN) {
-        console.warn("Prohibited: Requests too fast.");
-        return;
-    }
-    _lastPointAdd = now;
+        // 3. TIME COOLDOWN CHECK
+        const now = Date.now();
+        if (now - _lastPointAdd < _COOLDOWN) {
+            console.warn("Prohibited: Requests too fast.");
+            return;
+        }
+        
+        // Prevent double-earning on the same ad
         if (!element || element.getAttribute('data-earned') === 'true') return;
         
+        _lastPointAdd = now;
         element.setAttribute('data-earned', 'true');
 
         try {
-            // 1. Get current profile points from Appwrite
+            // 1. Get current profile data from Appwrite
             const profile = await databases.getDocument(DB_ID, PROFILES_ID, currentUser.$id);
-            const newTotal = (profile.points || 0) + amount;
+            const oldPoints = profile.points || 0;
+            const newTotal = oldPoints + amount;
 
-            // 2. Update Appwrite
-            await databases.updateDocument(DB_ID, PROFILES_ID, currentUser.$id, {
-                points: newTotal
-            });
+            // --- REFERRAL LOGIC START ---
+            let updatePayload = { points: newTotal };
+
+            // Check if they hit the 20-point milestone and have an inviter
+            if (oldPoints < 20 && newTotal >= 20 && profile.referred_by) {
+                console.log("Milestone reached! Rewarding inviter...");
+                const inviterId = profile.referred_by;
+
+                try {
+                    // Fetch inviter's current referral earnings
+                    const inviterProfile = await databases.getDocument(DB_ID, PROFILES_ID, inviterId);
+                    const currentRefEarnings = inviterProfile.referral_earnings || 0;
+
+                    // Add 100 Naira to the inviter
+                    await databases.updateDocument(DB_ID, PROFILES_ID, inviterId, {
+                        referral_earnings: currentRefEarnings + 100
+                    });
+                    console.log("100 Naira successfully sent to inviter.");
+                } catch (refErr) {
+                    console.error("Failed to reward inviter:", refErr);
+                }
+            }
+            // --- REFERRAL LOGIC END ---
+
+            // 2. Update Current User in Appwrite
+            await databases.updateDocument(DB_ID, PROFILES_ID, currentUser.$id, updatePayload);
 
             // 3. UI Updates
             const ptsDisplay = document.getElementById("currentPoints");
@@ -856,7 +886,6 @@ if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true')
             element.style.boxShadow = "0 0 15px rgba(38, 255, 0, 0.3)";
 
             // Find and show the specific badge for this ad
-            // We search within the 'element' (the ad-post)
             const index = element.getAttribute('data-ad-index');
             const badge = document.getElementById(`earnedBadge${index}`);
             if (badge) {
@@ -870,7 +899,6 @@ if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true')
             element.setAttribute('data-earned', 'false');
         }
     }
-
     // 7. SOUND TOGGLES
     function toggleAdSound(index) {
         const v = document.getElementById(`adMedia${index}`);
@@ -1085,7 +1113,8 @@ const videoObserver = new IntersectionObserver((entries) => {
             // 1. Update Profile
             await databases.updateDocument(DB_ID, PROFILES_ID, currentUser.$id, {
                 phone_number: phone,
-                network: network
+                network: network,
+                hasClaimedBonus: true
             });
 
             // 2. Create Withdrawal Record
