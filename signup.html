@@ -66,6 +66,7 @@
 
 
 <script>
+  // 1. Initialize Appwrite first
   const sdk = new Appwrite.Client();
   sdk
     .setEndpoint('https://fra.cloud.appwrite.io/v1') 
@@ -78,10 +79,18 @@
   const PROFILES_ID = 'profiles';
   const REFERRALS_ID = 'referrals';
 
+  // 2. Capture referral code
   const urlParams = new URLSearchParams(window.location.search);
   const referrerUsername = urlParams.get('ref');
 
+  // 3. The Function
   async function handleSignUp() {
+    // Check if variables are ready (Safety check)
+    if (!account || !databases) {
+        console.error("Appwrite not initialized yet.");
+        return;
+    }
+
     const btn = document.querySelector('.btn-signup');
     const email = document.getElementById('regEmail').value;
     const password = document.getElementById('regPassword').value;
@@ -96,13 +105,17 @@
     btn.disabled = true;
 
     try {
+        // Create the Auth Account
         const userAccount = await account.create('unique()', email, password, username);
+
+        // Create Session
         await account.createEmailSession(email, password);
+
+        // Send Verification
         await account.createVerification('https://sami-2023.github.io/samiAppwrite/index.html');
 
         // --- STEP 4: CREATE PROFILE ---
-        // We add 'referral_earnings' here. 
-        // IMPORTANT: You MUST add this attribute in Appwrite Console first!
+        // Ensure 'referral_earnings' exists in Appwrite Console Attributes!
         await databases.createDocument(DB_ID, PROFILES_ID, userAccount.$id, {
             username: username,
             points: 0,
@@ -111,6 +124,7 @@
             hasClaimedBonus: false 
         });
 
+        // Referral logic
         if (referrerUsername && referrerUsername !== "none") {
             try {
                 const referrerDoc = await databases.listDocuments(DB_ID, PROFILES_ID, [
@@ -127,7 +141,7 @@
                     });
                 }
             } catch (refErr) {
-                console.error("Referral record failed:", refErr);
+                console.warn("Referral link failed, but account was created:", refErr);
             }
         }
 
@@ -139,7 +153,10 @@
         btn.innerText = "SIGN UP";
         btn.disabled = false;
     }
-}
+  }
+
+  // Make the function available globally if you are using 'onclick' in HTML
+  window.handleSignUp = handleSignUp;
 </script>
 </body>
 </html>
