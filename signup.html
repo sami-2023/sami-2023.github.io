@@ -89,7 +89,7 @@
     const btn = document.querySelector('.btn-signup');
     const email = document.getElementById('regEmail').value;
     const password = document.getElementById('regPassword').value;
-    const usernameValue = regUsernameField ? regUsernameField.value.trim() : "";
+    const username = document.getElementById('regUsername').value.trim();
 
     if(!email || !password || !username) {
         alert("Please fill all fields");
@@ -129,7 +129,7 @@
 
         // 4. Create the Profile Document
         await databases.createDocument(DB_ID, PROFILES_ID, userAccount.$id, {
-           username: usernameValue || "Guest_" + Math.floor(Math.random() * 1000),
+            username: username || "New User",
             points: 0,
             referral_earnings: 0, // Initialize this!
             referred_by: inviterId, // Changed to camelCase to match the givePoints script
