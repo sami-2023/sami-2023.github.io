@@ -129,7 +129,7 @@
 
         // 4. Create the Profile Document
         await databases.createDocument(DB_ID, PROFILES_ID, userAccount.$id, {
-            username: username,
+            username: username || "New User",
             points: 0,
             referral_earnings: 0, // Initialize this!
             referred_by: inviterId, // Changed to camelCase to match the givePoints script
