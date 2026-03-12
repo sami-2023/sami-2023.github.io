@@ -1120,7 +1120,7 @@ const videoObserver = new IntersectionObserver((entries) => {
             // 2. Create Withdrawal Record
             await databases.createDocument(DB_ID, 'withdrawals', 'unique()', {
                 user_id: currentUser.$id,
-                amount: 100, // Fixed 100 airtime bonus
+                amount: 200, // Fixed 200 airtime bonus
                 phone: phone,
                 network: network,
                 status: "pending",
