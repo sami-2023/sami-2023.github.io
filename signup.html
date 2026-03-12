@@ -134,7 +134,7 @@
                         referrer_id: refUser.$id,
                         referred_user_id: userAccount.$id,
                         status: 'pending',
-                        reward_amount: 100
+                        reward_amount: 200
                     });
                 }
             } catch (refErr) {
@@ -143,7 +143,7 @@
         }
 
         // Change the alert to mention the email check
-        alert("Account Created! Please check your Gmail to verify your account and claim your ₦100 bonus.");
+        alert("Account Created! Please check your Gmail to verify your account and claim your ₦200 bonus.");
         
         // Redirect to index, but they won't see the bonus yet
         window.location.href = "index.html?needsVerification=true";
