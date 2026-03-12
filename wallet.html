@@ -186,11 +186,7 @@
       <span>Earnings History</span>
       <i class="fa-solid fa-clock-rotate-left" style="color:#ccc"></i>
     </div>
-    <div style="background: linear-gradient(135deg, #26ff00, #1eb300); padding: 20px; border-radius: 15px; color: white; margin: 20px 0; text-align: center;">
-    <p style="font-size: 12px; opacity: 0.9;">Referral Earnings</p>
-    <h2 id="refEarningsText" style="font-size: 32px; margin: 5px 0;">₦0.00</h2>
-    <button onclick="requestWithdrawal('referrals')" style="background: white; color: #1eb300; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; margin-top: 10px;">Withdraw to Bank</button>
-</div>
+    
 <!-- THE AD TIMER OVERLAY -->
 <div id="adScreen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:20000; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px;">
     <div style="background:#222; padding:30px; border-radius:20px; border: 2px solid #ff0a00;">
@@ -311,18 +307,16 @@
     function updateWalletDisplay() {
         const totalPointsEl = document.getElementById('totalPoints');
         const cashValueEl = document.getElementById('cashValue');
-        const refEarningsTextEl = document.getElementById('refEarningsText');
+        
 
         if (totalPointsEl) totalPointsEl.innerText = `${userPoints.toLocaleString()} Pts`;
         
-        if (cashValueEl) {
-            const dollars = ((userPoints / 1000) * 5).toFixed(2);
-            cashValueEl.innerText = `≈ $${dollars}`;
+                if (cashValueEl) {
+            // 1000 points now equals 4000 Naira
+            const naira = (userPoints / 1000) * 4000;
+            cashValueEl.innerText = `≈ ₦${naira.toLocaleString()}`;
         }
-
-        if (refEarningsTextEl) {
-            refEarningsTextEl.innerText = `₦${(currentEarnings || 0).toLocaleString()}`;
-        }
+       
     }
 
     // --- 4. WITHDRAWAL TRIGGER (Timer & Validation) ---
@@ -440,8 +434,14 @@
         btn.innerText = "Processing...";
 
         // Ensure we are sending a clean Integer to Appwrite
-        let rawAmount = (type === 'points') ? userPoints : currentEarnings;
-        let withdrawAmount = Math.floor(Number(rawAmount));
+       let withdrawAmount;
+if (type === 'points') {
+    // Convert points to Naira for the database record
+    withdrawAmount = (userPoints / 1000) * 4000;
+} else {
+    // Referral earnings are already in Naira
+    withdrawAmount = Math.floor(Number(currentEarnings));
+}
         
         let updateData = (type === 'points') ? { points: 0 } : { referral_earnings: 0 };
 
