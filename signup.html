@@ -66,7 +66,7 @@
 
 
 <script>
-  // 1. Initialize Appwrite first
+  // 1. Initialize Appwrite
   const sdk = new Appwrite.Client();
   sdk
     .setEndpoint('https://fra.cloud.appwrite.io/v1') 
@@ -77,20 +77,14 @@
 
   const DB_ID = '69930af300230e5efc4d';
   const PROFILES_ID = 'profiles';
-  const REFERRALS_ID = 'referrals';
+  const REFERRALS_ID = 'referrals'; // Make sure this matches your collection ID
 
-  // 2. Capture referral code
+  // Capture referral code from URL
   const urlParams = new URLSearchParams(window.location.search);
   const referrerUsername = urlParams.get('ref');
 
-  // 3. The Function
+  // --- MERGED SIGN UP LOGIC ---
   async function handleSignUp() {
-    // Check if variables are ready (Safety check)
-    if (!account || !databases) {
-        console.error("Appwrite not initialized yet.");
-        return;
-    }
-
     const btn = document.querySelector('.btn-signup');
     const email = document.getElementById('regEmail').value;
     const password = document.getElementById('regPassword').value;
@@ -105,26 +99,27 @@
     btn.disabled = true;
 
     try {
-        // Create the Auth Account
+        // 1. Create the Auth Account
         const userAccount = await account.create('unique()', email, password, username);
 
-        // Create Session
+        // 2. Log them in (REQUIRED to send verification)
+        // Using createEmailPasswordSession for 2026 SDK compatibility
         await account.createEmailSession(email, password);
 
-        // Send Verification
+        // 3. Send the Verification Email
+      // This tells Appwrite the EXACT subfolder where your index.html lives
         await account.createVerification('https://sami-2023.github.io/samiAppwrite/index.html');
-
-        // --- STEP 4: CREATE PROFILE ---
-        // Ensure 'referral_earnings' exists in Appwrite Console Attributes!
+        // 4. Create the Profile Document
         await databases.createDocument(DB_ID, PROFILES_ID, userAccount.$id, {
             username: username,
             points: 0,
-            referral_earnings: 0, 
             referred_by: referrerUsername || "none",
             hasClaimedBonus: false 
         });
 
-        // Referral logic
+        
+
+        // 5. Referral Logic (Keep your existing logic here)
         if (referrerUsername && referrerUsername !== "none") {
             try {
                 const referrerDoc = await databases.listDocuments(DB_ID, PROFILES_ID, [
@@ -141,11 +136,14 @@
                     });
                 }
             } catch (refErr) {
-                console.warn("Referral link failed, but account was created:", refErr);
+                console.error("Referral record failed:", refErr);
             }
         }
 
-        alert("Account Created! Please check your Gmail to verify.");
+        // Change the alert to mention the email check
+        alert("Account Created! Please check your Gmail to verify your account and claim your ₦100 bonus.");
+        
+        // Redirect to index, but they won't see the bonus yet
         window.location.href = "index.html?needsVerification=true";
 
     } catch (err) {
@@ -153,10 +151,102 @@
         btn.innerText = "SIGN UP";
         btn.disabled = false;
     }
-  }
+}
 
-  // Make the function available globally if you are using 'onclick' in HTML
-  window.handleSignUp = handleSignUp;
+
+
+
+</script><script>
+  // 1. Initialize Appwrite
+  const sdk = new Appwrite.Client();
+  sdk
+    .setEndpoint('https://fra.cloud.appwrite.io/v1') 
+    .setProject('69930a880011dec1e960'); 
+
+  const account = new Appwrite.Account(sdk);
+  const databases = new Appwrite.Databases(sdk);
+
+  const DB_ID = '69930af300230e5efc4d';
+  const PROFILES_ID = 'profiles';
+  const REFERRALS_ID = 'referrals'; // Make sure this matches your collection ID
+
+  // Capture referral code from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const referrerUsername = urlParams.get('ref');
+
+  // --- MERGED SIGN UP LOGIC ---
+  async function handleSignUp() {
+    const btn = document.querySelector('.btn-signup');
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+    const username = document.getElementById('regUsername').value.trim();
+
+    if(!email || !password || !username) {
+        alert("Please fill all fields");
+        return;
+    }
+
+    btn.innerText = "Creating Account...";
+    btn.disabled = true;
+
+    try {
+        // 1. Create the Auth Account
+        const userAccount = await account.create('unique()', email, password, username);
+
+        // 2. Log them in (REQUIRED to send verification)
+        // Using createEmailPasswordSession for 2026 SDK compatibility
+        await account.createEmailSession(email, password);
+
+        // 3. Send the Verification Email
+      // This tells Appwrite the EXACT subfolder where your index.html lives
+        await account.createVerification('https://sami-2023.github.io/samiAppwrite/index.html');
+        // 4. Create the Profile Document
+        await databases.createDocument(DB_ID, PROFILES_ID, userAccount.$id, {
+            username: username,
+            points: 0,
+            referred_by: referrerUsername || "none",
+            hasClaimedBonus: false 
+        });
+
+        
+
+        // 5. Referral Logic (Keep your existing logic here)
+        if (referrerUsername && referrerUsername !== "none") {
+            try {
+                const referrerDoc = await databases.listDocuments(DB_ID, PROFILES_ID, [
+                    Appwrite.Query.equal('username', referrerUsername)
+                ]);
+
+                if (referrerDoc.documents.length > 0) {
+                    const refUser = referrerDoc.documents[0];
+                    await databases.createDocument(DB_ID, REFERRALS_ID, 'unique()', {
+                        referrer_id: refUser.$id,
+                        referred_user_id: userAccount.$id,
+                        status: 'pending',
+                        reward_amount: 100
+                    });
+                }
+            } catch (refErr) {
+                console.error("Referral record failed:", refErr);
+            }
+        }
+
+        // Change the alert to mention the email check
+        alert("Account Created! Please check your Gmail to verify your account and claim your ₦100 bonus.");
+        
+        // Redirect to index, but they won't see the bonus yet
+        window.location.href = "index.html?needsVerification=true";
+
+    } catch (err) {
+        alert("Error: " + err.message);
+        btn.innerText = "SIGN UP";
+        btn.disabled = false;
+    }
+}
+
+
+
+
 </script>
 </body>
 </html>
