@@ -69,6 +69,7 @@
 
 <script>
   // 1. Initialize Appwrite
+  if (typeof sdk === 'undefined') {
   const sdk = new Appwrite.Client();
   sdk
     .setEndpoint('https://fra.cloud.appwrite.io/v1') 
@@ -76,7 +77,7 @@
 
   const account = new Appwrite.Account(sdk);
   const databases = new Appwrite.Databases(sdk);
-
+  }
   const DB_ID = '69930af300230e5efc4d';
   const PROFILES_ID = 'profiles';
   const REFERRALS_ID = 'referrals'; // Make sure this matches your collection ID
@@ -116,7 +117,7 @@
             username: username,
             points: 0,
             referred_by: referrerUsername || "none",
-            hasClaimedBonus: false 
+           
         });
 
         
@@ -133,8 +134,7 @@
                     await databases.createDocument(DB_ID, REFERRALS_ID, 'unique()', {
                         referrer_id: refUser.$id,
                         referred_user_id: userAccount.$id,
-                        status: 'pending',
-                        reward_amount: 200
+                        
                     });
                 }
             } catch (refErr) {
@@ -143,10 +143,10 @@
         }
 
         // Change the alert to mention the email check
-        alert("Account Created! Please check your Gmail to verify your account and claim your ₦200 bonus.");
+        alert("Account Created! Verify your email to start earning.");
         
         // Redirect to index, but they won't see the bonus yet
-        window.location.href = "index.html?needsVerification=true";
+        window.location.href = "index.html";
 
     } catch (err) {
         alert("Error: " + err.message);

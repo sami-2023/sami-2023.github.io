@@ -257,7 +257,7 @@
     const DB_ID = '69930af300230e5efc4d';
     const PROFILES_ID = 'profiles';
     const WITHDRAWALS_ID = 'withdrawals_request';
-    const AIRTIME_ID = 'withdrawals';
+    
 
     // ADSTERRA ASSETS
     const DIRECT_LINK = "https://www.effectivegatecpm.com/tzvwi0sdq?key=a8c9d79d97c614601f79e7efe3bf87bf";
@@ -490,22 +490,12 @@ if (type === 'points') {
 
         try {
             // Fetch both Bank Withdrawals and Airtime/Sign-up Bonuses
-            const [bankRes, airtimeRes] = await Promise.all([
-                databases.listDocuments(DB_ID, WITHDRAWALS_ID, [
-                    Appwrite.Query.equal('user_id', currentUser.$id),
-                    Appwrite.Query.orderDesc('$createdAt')
-                ]),
-                databases.listDocuments(DB_ID, AIRTIME_ID, [
-                    Appwrite.Query.equal('user_id', currentUser.$id),
-                    Appwrite.Query.orderDesc('$createdAt')
-                ])
-            ]);
-
-            // Combine both into one list and sort by newest first
-            const allLogs = [...bankRes.documents, ...airtimeRes.documents].sort((a, b) => 
-                new Date(b.$createdAt) - new Date(a.$createdAt)
-            );
-
+           // --- NEW CODE (Use this) ---
+const bankRes = await databases.listDocuments(DB_ID, WITHDRAWALS_ID, [
+    Appwrite.Query.equal('user_id', currentUser.$id),
+    Appwrite.Query.orderDesc('$createdAt')
+]);
+const allLogs = bankRes.documents;
             if (allLogs.length === 0) {
                 historyList.innerHTML = "<p style='text-align:center; color:#888; margin-top:20px;'>No history yet</p>";
                 return;
@@ -529,27 +519,23 @@ if (type === 'points') {
                     statusIcon = 'fa-circle-xmark';
                 }
 
-                return `
-                  <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:15px; border-radius:12px; margin-bottom:10px; border-left: 5px solid ${statusColor}; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                    <div style="display:flex; align-items:center;">
-                        <i class="fa-solid ${isAirtime ? 'fa-mobile-screen-button' : 'fa-university'}" style="margin-right:12px; color:#ff0a00; font-size:18px;"></i>
-                        <div>
-                          <p style="font-weight:bold; margin:0; font-size:14px; color:#333;">
-                            ${isAirtime ? 'Sign-up Airtime Bonus' : 'Bank Withdrawal'}
-                          </p>
-                          <p style="font-size:11px; color:${statusColor}; margin:0; font-weight:bold;">
-                            <i class="fa-solid ${statusIcon}"></i> ${status.toUpperCase()}
-                          </p>
-                        </div>
-                    </div>
-                    <div style="text-align:right;">
-                      <p style="font-weight:bold; margin:0; color:#333;">
-                        ${isAirtime ? 'AIRTIME' : '₦' + (item.amount || 0).toLocaleString()}
-                      </p>
-                      <p style="font-size:10px; color:#aaa;">${new Date(item.$createdAt).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                `;
+               return `
+  <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:15px; border-radius:12px; margin-bottom:10px; border-left: 5px solid ${statusColor};">
+    <div style="display:flex; align-items:center;">
+        <i class="fa-solid fa-university" style="margin-right:12px; color:#ff0a00; font-size:18px;"></i>
+        <div>
+          <p style="font-weight:bold; margin:0; font-size:14px; color:#333;">Bank Withdrawal</p>
+          <p style="font-size:11px; color:${statusColor}; margin:0; font-weight:bold;">
+            <i class="fa-solid ${statusIcon}"></i> ${status.toUpperCase()}
+          </p>
+        </div>
+    </div>
+    <div style="text-align:right;">
+      <p style="font-weight:bold; margin:0; color:#333;">₦${(item.amount || 0).toLocaleString()}</p>
+      <p style="font-size:10px; color:#aaa;">${new Date(item.$createdAt).toLocaleDateString()}</p>
+    </div>
+  </div>
+`;
             }).join('');
         } catch (e) {
             console.error("History error:", e);

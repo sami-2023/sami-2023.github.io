@@ -485,20 +485,6 @@
     const userId = urlParams.get('userId');
 
     // 1. HANDSHAKE: If secret/userId exist, verify them right now
-    if (secret && userId) {
-        try {
-            await account.updateVerification(userId, secret);
-            // FORCE the popup to show immediately after successful verification
-        const popup = document.getElementById('airtimePopup');
-        if (popup) popup.style.display = 'flex';
-            // Clean the URL so the secret is gone, and show success
-           // To this (to stay inside your folder):
-window.history.replaceState({}, document.title, "/samiAppwrite/index.html?verified=true");
-            alert("✓ Gmail Verified! You can now claim your ₦200 bonus.");
-        } catch (err) {
-            console.error("Verification error:", err.message);
-        }
-    }
 
     try {
         // 2. CHECK SESSION
@@ -520,20 +506,7 @@ window.history.replaceState({}, document.title, "/samiAppwrite/index.html?verifi
         return; // Stops the feed and ads from loading
     }
 
-  // 4. SHOW BONUS: Check URL and Database state
-const isNewOrVerified = urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true';
 
-if (isNewOrVerified && currentUser.emailVerification) {
-    try {
-        const profile = await databases.getDocument(DB_ID, PROFILES_ID, currentUser.$id);
-        if (!profile.hasClaimedBonus) {
-            const popup = document.getElementById('airtimePopup');
-            if (popup) popup.style.display = 'flex';
-        }
-    } catch (err) {
-        console.error("Error checking claim status:", err);
-    }
-}
 
     // 5. LOAD APP CONTENT (Only reached if verified)
    try {
@@ -643,12 +616,8 @@ if (isNewOrVerified && currentUser.emailVerification) {
     }
 
    
-    function finalizeClaim() {
-        alert("Bonus Claimed! Your ₦200 Airtime will be sent to " + document.getElementById('phoneInput').value + " shortly.");
-        document.getElementById('airtimePopup').style.display = 'none';
-        // Remove the ?newuser=true from URL so popup doesn't come back on refresh
-        window.history.replaceState({}, document.title, "index.html");
-    }
+    
+    
    // 3. RENDER FEED
     async function renderFeed() {
         const grid = document.getElementById("postsGrid");
@@ -1099,54 +1068,7 @@ const videoObserver = new IntersectionObserver((entries) => {
         document.body.appendChild(socialScript);
     }
 }
-  // --- 7. BONUS CLAIM HANDLER ---
-    async function handleClaimBonus() {
-        const phone = document.getElementById('phoneInput').value;
-        const network = document.getElementById('networkSelect').value;
-
-        if (!phone || !network) {
-            alert("Please fill all fields");
-            return;
-        }
-
-        try {
-            // 1. Update Profile
-            await databases.updateDocument(DB_ID, PROFILES_ID, currentUser.$id, {
-                phone_number: phone,
-                network: network,
-                hasClaimedBonus: true
-            });
-
-            // 2. Create Withdrawal Record
-            await databases.createDocument(DB_ID, 'withdrawals', 'unique()', {
-                user_id: currentUser.$id,
-                amount: 200, // Fixed 200 airtime bonus
-                phone: phone,
-                network: network,
-                status: "pending",
-                type: "signup_bonus"
-            });
-            // 3. SEND EMAIL TO ADMIN (Paste goes here!)
-            emailjs.send("service_l80jc6x", "template_j2gi0sz", {
-                username: currentUser.name || "New User",
-                phone: phone,
-                network: network,
-                user_id: currentUser.$id
-            }).then(() => {
-                console.log("Success! Email sent to Admin.");
-            }, (err) => {
-                console.log("Email failed to send, but record was saved in database.", err);
-            });
-
-            alert("Bonus Claimed! Airtime will be sent shortly.");
-            document.getElementById('airtimePopup').style.display = 'none';
-            // Clear URL and refresh UI
-            window.history.replaceState({}, document.title, "index.html");
-        } catch (error) {
-            console.error("Bonus error:", error);
-            alert("Error: " + error.message);
-        }
-    }
+ 
 
     // --- 8. UI CONTROLS ---
     function toggleSettingsMenu() {
