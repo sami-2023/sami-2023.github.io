@@ -509,36 +509,44 @@
 
 
     // 5. LOAD APP CONTENT (Only reached if verified)
-   try {
-    const response = await databases.listDocuments(DB_ID, POSTS_ID);
-    let allPosts = response.documents;
+  // 5. LOAD APP CONTENT (Only reached if verified)
+    try {
+        const response = await databases.listDocuments(DB_ID, POSTS_ID);
+        let allPosts = response.documents;
 
-    // 1. Find the user's most recent post
-    const userPosts = allPosts
-        .filter(p => p.user_id === currentUser.$id)
-        .sort((a, b) => new Date(b.$createdAt) - new Date(a.$createdAt));
-    
-    const latestUserPost = userPosts[0];
+        if (allPosts.length > 0) {
+            // 1. Find the user's most recent post
+            const userPosts = allPosts
+                .filter(p => p.user_id === currentUser.$id)
+                .sort((a, b) => new Date(b.$createdAt || 0) - new Date(a.$createdAt || 0));
+            
+            const latestUserPost = userPosts[0];
 
-    // 2. Remove that specific post from the main pool so it doesn't appear twice
-    let otherPosts = latestUserPost 
-        ? allPosts.filter(p => p.$id !== latestUserPost.$id) 
-        : allPosts;
+            // 2. Filter out the latest post from the rest of the pool
+            let otherPosts = latestUserPost 
+                ? allPosts.filter(p => p.$id !== latestUserPost.$id) 
+                : allPosts;
 
-    // 3. Shuffle only the "other" posts
-    otherPosts.sort(() => Math.random() - 0.5);
+            // 3. Shuffle the other posts
+            otherPosts.sort(() => Math.random() - 0.5);
 
-    // 4. Combine: User's newest post goes first, followed by the shuffled rest
-    cachedPosts = latestUserPost ? [latestUserPost, ...otherPosts] : otherPosts;
+            // 4. Combine
+            cachedPosts = latestUserPost ? [latestUserPost, ...otherPosts] : otherPosts;
+        } else {
+            console.log("No posts found in database.");
+            cachedPosts = [];
+        }
 
-} catch (err) {
-    console.error("Fetch error:", err);
-}
+        // Call these ONLY after posts are successfully assigned to cachedPosts
+        loadProfile();
+        renderFeed();
+          injectBottomBannerAd("container-footer-ad", "bde480069c84a2d4c2af25a3d057ea0a");
 
-    loadProfile();
-    renderFeed();
-    injectBottomBannerAd("container-footer-ad", "bde480069c84a2d4c2af25a3d057ea0a");
-}
+    } catch (err) {
+        console.error("Fetch error:", err);
+        // Even if fetching fails, try to load the profile so the UI isn't dead
+        loadProfile();
+    }
 
     // --- BOTTOM BANNER FUNCTION ---
     function injectBottomBannerAd(containerId, adId) {
@@ -621,7 +629,11 @@
    // 3. RENDER FEED
     async function renderFeed() {
         const grid = document.getElementById("postsGrid");
-        if (!grid || cachedPosts.length === 0) return;
+        if (!grid) return;
+        if (cachedPosts.length === 0) {
+            grid.innerHTML = `<p style="text-align:center; color:#999; padding:50px;">No posts available yet. Be the first to post!</p>`;
+            return;
+        }
 
         try {
             // 1. Fetch current user's likes to show orange hearts
