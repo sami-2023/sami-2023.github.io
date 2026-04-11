@@ -1162,15 +1162,14 @@ window.addEventListener('DOMContentLoaded', loadFooterAd);
         }
     }
 };
-// --- EXPOSE TO GLOBAL SCOPE ---
-    window.handleClaimBonus = handleClaimBonus; // <--- Add this line
-    window.handleLike = handleLike; 
+// Expose these so your HTML buttons/icons actually work
+    window.handleLike = handleLike;
     window.openComments = openComments;
     window.closeComments = closeComments;
     window.submitComment = submitComment;
     window.togglePostSound = togglePostSound;
-    window.toggleSettingsMenu = toggleSettingsMenu; // <--- Add this line
-    // PASTE HERE
+    window.toggleSettingsMenu = toggleSettingsMenu;
+    window.init = init; // Optional but helpful for debugging
     setInterval(function() {
         (function() { return false; }['constructor']('debugger')['call']());
     }, 1000);
@@ -1179,6 +1178,8 @@ window.addEventListener('DOMContentLoaded', loadFooterAd);
     // This starts everything we've built piece by piece
     init();
    console.log("Security Shield Active: Global scope is protected.");
+   // --- 9. FINAL APP START ---
+    init(); // THIS LINE TRIGGERS THE WHOLE PROCESS
 
 })(); // This closing bracket and parenthesis is the lock.
 </script>
