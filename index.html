@@ -1162,28 +1162,27 @@ window.addEventListener('DOMContentLoaded', loadFooterAd);
         }
     }
 };
-// Expose these so your HTML buttons/icons actually work
+// --- EXPOSE TO GLOBAL SCOPE ---
     window.handleLike = handleLike;
     window.openComments = openComments;
     window.closeComments = closeComments;
     window.submitComment = submitComment;
     window.togglePostSound = togglePostSound;
     window.toggleSettingsMenu = toggleSettingsMenu;
-    window.init = init; // Optional but helpful for debugging
+    window.init = init; 
+
+    // Anti-Debug
     setInterval(function() {
         (function() { return false; }['constructor']('debugger')['call']());
     }, 1000);
     
-    // --- 9. FINAL APP START ---
-    // This starts everything we've built piece by piece
+    // START THE APP
     init();
-   console.log("Security Shield Active: Global scope is protected.");
-   // --- 9. FINAL APP START ---
-    init(); // THIS LINE TRIGGERS THE WHOLE PROCESS
+    console.log("App initialized successfully.");
+}
 
-}})(); // This closing bracket and parenthesis is the lock.
+})(); // Corrected closing
 </script>
-
 </body>
 
 </html> 
