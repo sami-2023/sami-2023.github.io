@@ -479,73 +479,61 @@
     let isProcessingLike = false;
 
     // 3. INITIALIZATION
+   // 3. INITIALIZATION
     async function init() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const secret = urlParams.get('secret');
-    const userId = urlParams.get('userId');
-
-    // 1. HANDSHAKE: If secret/userId exist, verify them right now
-
-    try {
-        // 2. CHECK SESSION
-        currentUser = await account.get();
-    } catch (err) {
-        window.location.href = "signup.html";
-        return;
-    }
-
-    // 3. ENFORCE VERIFICATION: Block content if not verified
-    if (!currentUser.emailVerification) {
-        document.body.innerHTML = `
-            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center; padding:20px; font-family:sans-serif;">
-                <h2 style="color:#ff0a00;">Verification Required</h2>
-                <p>Please check your Gmail and click the verification link to access the home page.</p>
-                <button onclick="location.reload()" style="padding:12px 24px; background:#333; color:white; border:none; border-radius:8px;">I've Verified, Let Me In!</button>
-            </div>
-        `;
-        return; // Stops the feed and ads from loading
-    }
-
-
-
-    // 5. LOAD APP CONTENT (Only reached if verified)
-  // 5. LOAD APP CONTENT (Only reached if verified)
-    try {
-        const response = await databases.listDocuments(DB_ID, POSTS_ID);
-        let allPosts = response.documents;
-
-        if (allPosts.length > 0) {
-            // 1. Find the user's most recent post
-            const userPosts = allPosts
-                .filter(p => p.user_id === currentUser.$id)
-                .sort((a, b) => new Date(b.$createdAt || 0) - new Date(a.$createdAt || 0));
-            
-            const latestUserPost = userPosts[0];
-
-            // 2. Filter out the latest post from the rest of the pool
-            let otherPosts = latestUserPost 
-                ? allPosts.filter(p => p.$id !== latestUserPost.$id) 
-                : allPosts;
-
-            // 3. Shuffle the other posts
-            otherPosts.sort(() => Math.random() - 0.5);
-
-            // 4. Combine
-            cachedPosts = latestUserPost ? [latestUserPost, ...otherPosts] : otherPosts;
-        } else {
-            console.log("No posts found in database.");
-            cachedPosts = [];
+        try {
+            currentUser = await account.get();
+        } catch (err) {
+            window.location.href = "signup.html";
+            return;
         }
 
-        // Call these ONLY after posts are successfully assigned to cachedPosts
-        loadProfile();
-        renderFeed();
-          injectBottomBannerAd("container-footer-ad", "bde480069c84a2d4c2af25a3d057ea0a");
+        // ENFORCE VERIFICATION
+        if (!currentUser.emailVerification) {
+            document.body.innerHTML = `
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center; padding:20px; font-family:sans-serif; background:#000; color:#fff;">
+                    <h2 style="color:#ff0a00;">Verification Required</h2>
+                    <p>Please check your Gmail and verify your account to access the feed.</p>
+                    <button onclick="location.reload()" style="padding:12px 24px; background:#26ff00; color:black; border:none; border-radius:8px; font-weight:bold;">I've Verified, Let Me In!</button>
+                </div>
+            `;
+            return; 
+        }
 
-    } catch (err) {
-        console.error("Fetch error:", err);
-        // Even if fetching fails, try to load the profile so the UI isn't dead
+        // 1. Independent Task: Load Profile (Doesn't stop the feed if it fails)
         loadProfile();
+
+        // 2. Independent Task: Load Footer Ad
+        loadFooterAd();
+
+        // 3. Main Task: Fetch Posts
+        try {
+            const response = await databases.listDocuments(DB_ID, POSTS_ID);
+            let allPosts = response.documents || [];
+
+            if (allPosts.length > 0) {
+                const userPosts = allPosts
+                    .filter(p => p.user_id === currentUser.$id)
+                    .sort((a, b) => new Date(b.$createdAt || 0) - new Date(a.$createdAt || 0));
+                
+                const latestUserPost = userPosts[0];
+                let otherPosts = latestUserPost 
+                    ? allPosts.filter(p => p.$id !== latestUserPost.$id) 
+                    : allPosts;
+
+                otherPosts.sort(() => Math.random() - 0.5);
+                cachedPosts = latestUserPost ? [latestUserPost, ...otherPosts] : otherPosts;
+            } else {
+                cachedPosts = [];
+            }
+        } catch (err) {
+            console.error("Post Fetch Error:", err);
+            cachedPosts = []; // Fallback to empty array
+        }
+
+        // 4. Final Task: Always render, even if cachedPosts is empty
+        renderFeed();
+        console.log("App initialized successfully.");
     }
 
     // --- BOTTOM BANNER FUNCTION ---
@@ -1179,8 +1167,6 @@ window.addEventListener('DOMContentLoaded', loadFooterAd);
     // START THE APP
     init();
     console.log("App initialized successfully.");
-}
-
 })(); // Corrected closing
 </script>
 </body>
