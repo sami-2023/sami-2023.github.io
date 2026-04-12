@@ -478,7 +478,24 @@
     let cachedPosts = [];
     let isProcessingLike = false;
 
-    // 3. INITIALIZATION
+    // 2. THE CHECK FUNCTION (Move this INSIDE the IIFE)
+    async function checkVerification() {
+        try {
+            // Re-fetch the user status from the server
+            const user = await account.get();
+            if (user.emailVerification) {
+                window.location.reload(); 
+            } else {
+                alert("Our system still shows you as unverified. Please click the link in your Gmail first!");
+            }
+        } catch (err) {
+            console.error("Verification check failed", err);
+            alert("Session expired. Please log in again.");
+            window.location.href = "signup.html";
+        }
+    }
+    // Make it available to the button click
+    window.checkVerification = checkVerification;
    // 3. INITIALIZATION
     async function init() {
         try {
@@ -494,7 +511,7 @@
                 <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center; padding:20px; font-family:sans-serif; background:#000; color:#fff;">
                     <h2 style="color:#ff0a00;">Verification Required</h2>
                     <p>Please check your Gmail and verify your account to access the feed.</p>
-                    <button onclick="location.reload()" style="padding:12px 24px; background:#26ff00; color:black; border:none; border-radius:8px; font-weight:bold;">I've Verified, Let Me In!</button>
+                    <button onclick="checkVerification()" style="padding:12px 24px; background:#26ff00; color:black; border:none; border-radius:8px; font-weight:bold;">I've Verified, Let Me In!</button>
                 </div>
             `;
             return; 
@@ -1168,6 +1185,7 @@ window.addEventListener('DOMContentLoaded', loadFooterAd);
     init();
     console.log("App initialized successfully.");
 })(); // Corrected closing
+
 </script>
 </body>
 
