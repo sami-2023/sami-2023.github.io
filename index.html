@@ -345,104 +345,6 @@
 
   </div>
 
-  <div id="infoModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center; padding:20px;">
-
-  <div style="background:white; padding:30px; border-radius:15px; width:90%; max-width:400px; text-align:center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); position: relative; margin: auto;">
-
-    <h2 style="color:#ff0a00;">Almost Ready! 🚀</h2>
-
-    <p style="color:#666; font-size:14px; margin-bottom:20px;">Please provide your airtime details so we can send your rewards instantly.</p>
-
-   
-
-    <label style="display:block; text-align:left; font-size:12px; color:#999;">Select Network</label>
-
-    <select id="popNetwork" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #ddd;">
-
-        <option value="MTN">MTN</option>
-
-        <option value="Airtel">Airtel</option>
-
-        <option value="Glo">Glo</option>
-
-        <option value="9mobile">9mobile</option>
-
-    </select>
-
-
-
-    <label style="display:block; text-align:left; font-size:12px; color:#999;">Phone Number</label>
-
-    <input type="number" id="popPhone" placeholder="08012345678" style="width:100%; padding:12px; margin-bottom:20px; border-radius:10px; border:1px solid #ddd;">
-
-
-
-    <button onclick="saveUserInfo()" style="width:100%; background:linear-gradient(90deg, #ff0a00, #26ff00); color:white; border:none; padding:15px; border-radius:10px; font-weight:bold; cursor:pointer;">SAVE & START EARNING</button>
-
-  </div>
-
-</div>
-
-<div id="airtimePopup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center;">
-
-    <div style="background:white; padding:30px; border-radius:15px; width:90%; max-width:400px; text-align:center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); position: relative; margin: auto;">
-
-       
-
-        <h2 style="color: #ff0a00; margin-top:0;">🎁 Welcome Bonus!</h2>
-
-        <p style="color: #555; font-size: 14px;">Enter your details below to claim your free sign-up airtime.</p>
-
-       
-
-        <div style="margin: 20px 0; text-align: left;">
-
-            <label style="font-weight: bold; font-size: 12px; display:block; margin-bottom:5px;">PHONE NUMBER</label>
-
-            <input type="text" id="phoneInput" placeholder="e.g. 08012345678" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; box-sizing: border-box;">
-
-        </div>
-
-
-
-        <div style="margin: 20px 0; text-align: left;">
-
-            <label style="font-weight: bold; font-size: 12px; display:block; margin-bottom:5px;">NETWORK PROVIDER</label>
-
-            <select id="networkSelect" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; background: white;">
-
-                <option value="">Select Network</option>
-
-                <option value="MTN">MTN</option>
-
-                <option value="Airtel">Airtel</option>
-
-                <option value="Glo">Glo</option>
-
-                <option value="9mobile">9mobile</option>
-
-            </select>
-
-        </div>
-
-
-
-        <button onclick="handleClaimBonus()" style="width:100%; background:#ff0a00; color:white; border:none; padding:15px; border-radius:8px; font-weight:bold; cursor:pointer; font-size:16px;">
-
-            CLAIM AIRTIME NOW
-
-        </button>
-
-       
-
-        <p style="font-size: 10px; color: #999; margin-top: 15px;">*Bonus is for new users only. Processing takes 5-10 minutes.</p>
-
-    </div>
-
-</div>
-
-
-
 <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
 <!-- 1. Load the EmailJS Library -->
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -490,11 +392,7 @@
             await account.updateVerification(userId, secret);
             // FORCE the popup to show immediately after successful verification
         const popup = document.getElementById('airtimePopup');
-        if (popup) popup.style.display = 'flex';
-            // Clean the URL so the secret is gone, and show success
-           // To this (to stay inside your folder):
-window.history.replaceState({}, document.title, "/samiAppwrite/index.html?verified=true");
-            alert("✓ Gmail Verified! You can now claim your ₦100 bonus.");
+       
         } catch (err) {
             console.error("Verification error:", err.message);
         }
@@ -519,16 +417,6 @@ window.history.replaceState({}, document.title, "/samiAppwrite/index.html?verifi
         `;
         return; // Stops the feed and ads from loading
     }
-
-   // 4. SHOW BONUS: Check for both 'newuser' OR 'verified' tags
-if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true') {
-    // Check if user is verified AND hasn't claimed yet
-    if (currentUser.emailVerification && !currentUser.hasClaimedBonus) {
-        const popup = document.getElementById('airtimePopup');
-        if (popup) popup.style.display = 'flex';
-    }
-}
-
     // 5. LOAD APP CONTENT (Only reached if verified)
    try {
     const response = await databases.listDocuments(DB_ID, POSTS_ID);
@@ -1071,54 +959,6 @@ const videoObserver = new IntersectionObserver((entries) => {
         document.body.appendChild(socialScript);
     }
 }
-  // --- 7. BONUS CLAIM HANDLER ---
-    async function handleClaimBonus() {
-        const phone = document.getElementById('phoneInput').value;
-        const network = document.getElementById('networkSelect').value;
-
-        if (!phone || !network) {
-            alert("Please fill all fields");
-            return;
-        }
-
-        try {
-            // 1. Update Profile
-            await databases.updateDocument(DB_ID, PROFILES_ID, currentUser.$id, {
-                phone_number: phone,
-                network: network
-            });
-
-            // 2. Create Withdrawal Record
-            await databases.createDocument(DB_ID, 'withdrawals', 'unique()', {
-                user_id: currentUser.$id,
-                amount: 100, // Fixed 100 airtime bonus
-                phone: phone,
-                network: network,
-                status: "pending",
-                type: "signup_bonus"
-            });
-            // 3. SEND EMAIL TO ADMIN (Paste goes here!)
-            emailjs.send("service_l80jc6x", "template_j2gi0sz", {
-                username: currentUser.name || "New User",
-                phone: phone,
-                network: network,
-                user_id: currentUser.$id
-            }).then(() => {
-                console.log("Success! Email sent to Admin.");
-            }, (err) => {
-                console.log("Email failed to send, but record was saved in database.", err);
-            });
-
-            alert("Bonus Claimed! Airtime will be sent shortly.");
-            document.getElementById('airtimePopup').style.display = 'none';
-            // Clear URL and refresh UI
-            window.history.replaceState({}, document.title, "index.html");
-        } catch (error) {
-            console.error("Bonus error:", error);
-            alert("Error: " + error.message);
-        }
-    }
-
     // --- 8. UI CONTROLS ---
     function toggleSettingsMenu() {
         const menu = document.getElementById('settingsMenu');
