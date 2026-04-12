@@ -478,80 +478,88 @@
     let cachedPosts = [];
     let isProcessingLike = false;
 
-    // 2. THE CHECK FUNCTION (Move this INSIDE the IIFE)
-    async function checkVerification() {
-        try {
-            // Re-fetch the user status from the server
-            const user = await account.get();
-            if (user.emailVerification) {
-                window.location.reload(); 
-            } else {
-                alert("Our system still shows you as unverified. Please click the link in your Gmail first!");
-            }
-        } catch (err) {
-            console.error("Verification check failed", err);
-            alert("Session expired. Please log in again.");
-            window.location.href = "signup.html";
-        }
-    }
-    // Make it available to the button click
-    window.checkVerification = checkVerification;
-   // 3. INITIALIZATION
+    // 3. INITIALIZATION
     async function init() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const secret = urlParams.get('secret');
+    const userId = urlParams.get('userId');
+
+    // 1. HANDSHAKE: If secret/userId exist, verify them right now
+    if (secret && userId) {
         try {
-            currentUser = await account.get();
+            await account.updateVerification(userId, secret);
+            // FORCE the popup to show immediately after successful verification
+        const popup = document.getElementById('airtimePopup');
+        if (popup) popup.style.display = 'flex';
+            // Clean the URL so the secret is gone, and show success
+           // To this (to stay inside your folder):
+window.history.replaceState({}, document.title, "/samiAppwrite/index.html?verified=true");
+            alert("✓ Gmail Verified! You can now claim your ₦100 bonus.");
         } catch (err) {
-            window.location.href = "signup.html";
-            return;
+            console.error("Verification error:", err.message);
         }
-
-        // ENFORCE VERIFICATION
-        if (!currentUser.emailVerification) {
-            document.body.innerHTML = `
-                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center; padding:20px; font-family:sans-serif; background:#000; color:#fff;">
-                    <h2 style="color:#ff0a00;">Verification Required</h2>
-                    <p>Please check your Gmail and verify your account to access the feed.</p>
-                    <button onclick="checkVerification()" style="padding:12px 24px; background:#26ff00; color:black; border:none; border-radius:8px; font-weight:bold;">I've Verified, Let Me In!</button>
-                </div>
-            `;
-            return; 
-        }
-
-        // 1. Independent Task: Load Profile (Doesn't stop the feed if it fails)
-        loadProfile();
-
-        // 2. Independent Task: Load Footer Ad
-        loadFooterAd();
-
-        // 3. Main Task: Fetch Posts
-        try {
-            const response = await databases.listDocuments(DB_ID, POSTS_ID);
-            let allPosts = response.documents || [];
-
-            if (allPosts.length > 0) {
-                const userPosts = allPosts
-                    .filter(p => p.user_id === currentUser.$id)
-                    .sort((a, b) => new Date(b.$createdAt || 0) - new Date(a.$createdAt || 0));
-                
-                const latestUserPost = userPosts[0];
-                let otherPosts = latestUserPost 
-                    ? allPosts.filter(p => p.$id !== latestUserPost.$id) 
-                    : allPosts;
-
-                otherPosts.sort(() => Math.random() - 0.5);
-                cachedPosts = latestUserPost ? [latestUserPost, ...otherPosts] : otherPosts;
-            } else {
-                cachedPosts = [];
-            }
-        } catch (err) {
-            console.error("Post Fetch Error:", err);
-            cachedPosts = []; // Fallback to empty array
-        }
-
-        // 4. Final Task: Always render, even if cachedPosts is empty
-        renderFeed();
-        console.log("App initialized successfully.");
     }
+
+    try {
+        // 2. CHECK SESSION
+        currentUser = await account.get();
+    } catch (err) {
+        window.location.href = "signup.html";
+        return;
+    }
+
+    // 3. ENFORCE VERIFICATION: Block content if not verified
+    if (!currentUser.emailVerification) {
+        document.body.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center; padding:20px; font-family:sans-serif;">
+                <h2 style="color:#ff0a00;">Verification Required</h2>
+                <p>Please check your Gmail and click the verification link to access the home page.</p>
+                <button onclick="location.reload()" style="padding:12px 24px; background:#333; color:white; border:none; border-radius:8px;">I've Verified, Let Me In!</button>
+            </div>
+        `;
+        return; // Stops the feed and ads from loading
+    }
+
+   // 4. SHOW BONUS: Check for both 'newuser' OR 'verified' tags
+if (urlParams.get('newuser') === 'true' || urlParams.get('verified') === 'true') {
+    // Check if user is verified AND hasn't claimed yet
+    if (currentUser.emailVerification && !currentUser.hasClaimedBonus) {
+        const popup = document.getElementById('airtimePopup');
+        if (popup) popup.style.display = 'flex';
+    }
+}
+
+    // 5. LOAD APP CONTENT (Only reached if verified)
+   try {
+    const response = await databases.listDocuments(DB_ID, POSTS_ID);
+    let allPosts = response.documents;
+
+    // 1. Find the user's most recent post
+    const userPosts = allPosts
+        .filter(p => p.user_id === currentUser.$id)
+        .sort((a, b) => new Date(b.$createdAt) - new Date(a.$createdAt));
+    
+    const latestUserPost = userPosts[0];
+
+    // 2. Remove that specific post from the main pool so it doesn't appear twice
+    let otherPosts = latestUserPost 
+        ? allPosts.filter(p => p.$id !== latestUserPost.$id) 
+        : allPosts;
+
+    // 3. Shuffle only the "other" posts
+    otherPosts.sort(() => Math.random() - 0.5);
+
+    // 4. Combine: User's newest post goes first, followed by the shuffled rest
+    cachedPosts = latestUserPost ? [latestUserPost, ...otherPosts] : otherPosts;
+
+} catch (err) {
+    console.error("Fetch error:", err);
+}
+
+    loadProfile();
+    renderFeed();
+    injectBottomBannerAd("container-footer-ad", "bde480069c84a2d4c2af25a3d057ea0a");
+}
 
     // --- BOTTOM BANNER FUNCTION ---
     function injectBottomBannerAd(containerId, adId) {
@@ -629,16 +637,16 @@
     }
 
    
-    
-    
+    function finalizeClaim() {
+        alert("Bonus Claimed! Your ₦100 Airtime will be sent to " + document.getElementById('phoneInput').value + " shortly.");
+        document.getElementById('airtimePopup').style.display = 'none';
+        // Remove the ?newuser=true from URL so popup doesn't come back on refresh
+        window.history.replaceState({}, document.title, "index.html");
+    }
    // 3. RENDER FEED
     async function renderFeed() {
         const grid = document.getElementById("postsGrid");
-        if (!grid) return;
-        if (cachedPosts.length === 0) {
-            grid.innerHTML = `<p style="text-align:center; color:#999; padding:50px;">No posts available yet. Be the first to post!</p>`;
-            return;
-        }
+        if (!grid || cachedPosts.length === 0) return;
 
         try {
             // 1. Fetch current user's likes to show orange hearts
@@ -809,59 +817,35 @@
     });
 }, { threshold: 0.8 });
 
-// 6. IMPROVED GIVE POINTS FUNCTION (With Referral Rewards)
+    // 6. IMPROVED GIVE POINTS FUNCTION
     async function givePoints(element, amount, secretKey) {
-        // 2. SECRET KEY CHECK
-        if (secretKey !== "Gold_Secure_88x") {
-            console.warn("Prohibited: System bypass detected.");
-            return;
-        }
-
-        // 3. TIME COOLDOWN CHECK
-        const now = Date.now();
-        if (now - _lastPointAdd < _COOLDOWN) {
-            console.warn("Prohibited: Requests too fast.");
-            return;
-        }
-        
         // Prevent double-earning on the same ad
+        // 2. SECRET KEY CHECK
+    if (secretKey !== "Gold_Secure_88x") {
+        console.warn("Prohibited: System bypass detected.");
+        return;
+    }
+
+    // 3. TIME COOLDOWN CHECK
+    const now = Date.now();
+    if (now - _lastPointAdd < _COOLDOWN) {
+        console.warn("Prohibited: Requests too fast.");
+        return;
+    }
+    _lastPointAdd = now;
         if (!element || element.getAttribute('data-earned') === 'true') return;
         
-        _lastPointAdd = now;
         element.setAttribute('data-earned', 'true');
 
         try {
-            // 1. Get current profile data from Appwrite
+            // 1. Get current profile points from Appwrite
             const profile = await databases.getDocument(DB_ID, PROFILES_ID, currentUser.$id);
-            const oldPoints = profile.points || 0;
-            const newTotal = oldPoints + amount;
+            const newTotal = (profile.points || 0) + amount;
 
-            // --- REFERRAL LOGIC START ---
-            let updatePayload = { points: newTotal };
-
-            // Check if they hit the 20-point milestone and have an inviter
-            if (oldPoints < 20 && newTotal >= 20 && profile.referred_by) {
-                console.log("Milestone reached! Rewarding inviter...");
-                const inviterId = profile.referred_by;
-
-                try {
-                    // Fetch inviter's current referral earnings
-                    const inviterProfile = await databases.getDocument(DB_ID, PROFILES_ID, inviterId);
-                    const currentRefEarnings = inviterProfile.referral_earnings || 0;
-
-                    // Add 100 Naira to the inviter
-                    await databases.updateDocument(DB_ID, PROFILES_ID, inviterId, {
-                        referral_earnings: currentRefEarnings + 100
-                    });
-                    console.log("100 Naira successfully sent to inviter.");
-                } catch (refErr) {
-                    console.error("Failed to reward inviter:", refErr);
-                }
-            }
-            // --- REFERRAL LOGIC END ---
-
-            // 2. Update Current User in Appwrite
-            await databases.updateDocument(DB_ID, PROFILES_ID, currentUser.$id, updatePayload);
+            // 2. Update Appwrite
+            await databases.updateDocument(DB_ID, PROFILES_ID, currentUser.$id, {
+                points: newTotal
+            });
 
             // 3. UI Updates
             const ptsDisplay = document.getElementById("currentPoints");
@@ -872,6 +856,7 @@
             element.style.boxShadow = "0 0 15px rgba(38, 255, 0, 0.3)";
 
             // Find and show the specific badge for this ad
+            // We search within the 'element' (the ad-post)
             const index = element.getAttribute('data-ad-index');
             const badge = document.getElementById(`earnedBadge${index}`);
             if (badge) {
@@ -885,6 +870,7 @@
             element.setAttribute('data-earned', 'false');
         }
     }
+
     // 7. SOUND TOGGLES
     function toggleAdSound(index) {
         const v = document.getElementById(`adMedia${index}`);
@@ -1085,7 +1071,53 @@ const videoObserver = new IntersectionObserver((entries) => {
         document.body.appendChild(socialScript);
     }
 }
- 
+  // --- 7. BONUS CLAIM HANDLER ---
+    async function handleClaimBonus() {
+        const phone = document.getElementById('phoneInput').value;
+        const network = document.getElementById('networkSelect').value;
+
+        if (!phone || !network) {
+            alert("Please fill all fields");
+            return;
+        }
+
+        try {
+            // 1. Update Profile
+            await databases.updateDocument(DB_ID, PROFILES_ID, currentUser.$id, {
+                phone_number: phone,
+                network: network
+            });
+
+            // 2. Create Withdrawal Record
+            await databases.createDocument(DB_ID, 'withdrawals', 'unique()', {
+                user_id: currentUser.$id,
+                amount: 100, // Fixed 100 airtime bonus
+                phone: phone,
+                network: network,
+                status: "pending",
+                type: "signup_bonus"
+            });
+            // 3. SEND EMAIL TO ADMIN (Paste goes here!)
+            emailjs.send("service_l80jc6x", "template_j2gi0sz", {
+                username: currentUser.name || "New User",
+                phone: phone,
+                network: network,
+                user_id: currentUser.$id
+            }).then(() => {
+                console.log("Success! Email sent to Admin.");
+            }, (err) => {
+                console.log("Email failed to send, but record was saved in database.", err);
+            });
+
+            alert("Bonus Claimed! Airtime will be sent shortly.");
+            document.getElementById('airtimePopup').style.display = 'none';
+            // Clear URL and refresh UI
+            window.history.replaceState({}, document.title, "index.html");
+        } catch (error) {
+            console.error("Bonus error:", error);
+            alert("Error: " + error.message);
+        }
+    }
 
     // --- 8. UI CONTROLS ---
     function toggleSettingsMenu() {
@@ -1168,25 +1200,26 @@ window.addEventListener('DOMContentLoaded', loadFooterAd);
     }
 };
 // --- EXPOSE TO GLOBAL SCOPE ---
-    window.handleLike = handleLike;
+    window.handleClaimBonus = handleClaimBonus; // <--- Add this line
+    window.handleLike = handleLike; 
     window.openComments = openComments;
     window.closeComments = closeComments;
     window.submitComment = submitComment;
     window.togglePostSound = togglePostSound;
-    window.toggleSettingsMenu = toggleSettingsMenu;
-    window.init = init; 
-
-    // Anti-Debug
+    window.toggleSettingsMenu = toggleSettingsMenu; // <--- Add this line
+    // PASTE HERE
     setInterval(function() {
         (function() { return false; }['constructor']('debugger')['call']());
     }, 1000);
     
-    // START THE APP
+    // --- 9. FINAL APP START ---
+    // This starts everything we've built piece by piece
     init();
-    console.log("App initialized successfully.");
-})(); // Corrected closing
+   console.log("Security Shield Active: Global scope is protected.");
 
+})(); // This closing bracket and parenthesis is the lock.
 </script>
+
 </body>
 
 </html> 
