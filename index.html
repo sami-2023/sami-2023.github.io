@@ -421,6 +421,32 @@
         renderFeed();
         loadFooterAd();
     }
+     // 5. LOAD APP CONTENT (Only reached if verified)
+   try {
+    const response = await databases.listDocuments(DB_ID, POSTS_ID);
+    let allPosts = response.documents;
+
+    // 1. Find the user's most recent post
+    const userPosts = allPosts
+        .filter(p => p.user_id === currentUser.$id)
+        .sort((a, b) => new Date(b.$createdAt) - new Date(a.$createdAt));
+    
+    const latestUserPost = userPosts[0];
+
+    // 2. Remove that specific post from the main pool so it doesn't appear twice
+    let otherPosts = latestUserPost 
+        ? allPosts.filter(p => p.$id !== latestUserPost.$id) 
+        : allPosts;
+
+    // 3. Shuffle only the "other" posts
+    otherPosts.sort(() => Math.random() - 0.5);
+
+    // 4. Combine: User's newest post goes first, followed by the shuffled rest
+    cachedPosts = latestUserPost ? [latestUserPost, ...otherPosts] : otherPosts;
+
+} catch (err) {
+    console.error("Fetch error:", err);
+}
 
     // 3. DATA LOADING FUNCTIONS
     async function loadFeedData() {
@@ -576,6 +602,51 @@
             element.setAttribute('data-earned', 'false');
         }
     }
+    
+  // 4. LIKES LOGIC (APPWRITE VERSION)
+    async function handleLike(postId, iconElement) {
+        if (!currentUser || isProcessingLike) return; 
+        isProcessingLike = true;
+
+        const countSpan = iconElement.parentElement.querySelector('.like-count-label');
+        
+        // Better way to check if liked: check a class or a specific hex
+        const isCurrentlyLiked = iconElement.style.color === "rgb(255, 69, 0)" || 
+                                 iconElement.style.color === "#ff4500" || 
+                                 iconElement.classList.contains('active-like'); 
+
+        let currentLikes = parseInt(countSpan.textContent) || 0;
+        let newLikeCount = isCurrentlyLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1;
+
+        // UI Update (Fast)
+        iconElement.style.color = isCurrentlyLiked ? "#ccc" : "#ff4500";
+        countSpan.textContent = `${newLikeCount} Likes`;
+        if(!isCurrentlyLiked) iconElement.classList.add('active-like');
+        else iconElement.classList.remove('active-like');
+
+        try {
+            if (isCurrentlyLiked) {
+                const likeDoc = await databases.listDocuments(DB_ID, LIKES_ID, [
+                    Appwrite.Query.equal('post_id', postId),
+                    Appwrite.Query.equal('user_id', currentUser.$id)
+                ]);
+                if (likeDoc.documents.length > 0) {
+                    await databases.deleteDocument(DB_ID, LIKES_ID, likeDoc.documents[0].$id);
+                }
+            } else {
+                await databases.createDocument(DB_ID, LIKES_ID, 'unique()', {
+                    post_id: postId,
+                    user_id: currentUser.$id
+                });
+            }
+            await databases.updateDocument(DB_ID, POSTS_ID, postId, { likes: newLikeCount });
+        } catch (err) {
+            console.error("Like error:", err);
+        } finally {
+            isProcessingLike = false;
+        }
+    }
+
 
     // 6. GLOBAL HELPERS
     window.handleLike = async function(postId, iconElement) {
