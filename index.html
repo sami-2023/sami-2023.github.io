@@ -605,20 +605,7 @@
         });
     }, { threshold: 0.3 });
 
-    // --- EXPOSE TO GLOBAL SCOPE ---
-    // This allows your HTML onclick events to work
-    window.openComments = openComments;
-    window.closeComments = closeComments;
-    window.submitComment = submitComment;
-    window.handleLike = handleLike;
-    window.togglePostSound = togglePostSound;
-    window.toggleSettingsMenu = toggleSettingsMenu;
     
-    // Ensure these helper functions are also accessible if called dynamically
-    window.injectPartnerAd = injectPartnerAd; 
-    window.loadFooterAd = loadFooterAd;
-
-   
 
     // 7. START
     init();
