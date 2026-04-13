@@ -358,7 +358,7 @@
 </script>
 
 <script>
-   (function() {
+   (async function() {
         
     // PASTE HERE
     let _lastPointAdd = 0; 
@@ -418,6 +418,7 @@
         return; // Stops the feed and ads from loading
     }
     // 5. LOAD APP CONTENT (Only reached if verified)
+    async function init() {
    try {
     const response = await databases.listDocuments(DB_ID, POSTS_ID);
     let allPosts = response.documents;
@@ -1042,7 +1043,7 @@ window.addEventListener('DOMContentLoaded', loadFooterAd);
     }
 };
 // --- EXPOSE TO GLOBAL SCOPE ---
-    window.handleClaimBonus = handleClaimBonus; // <--- Add this line
+    
     window.handleLike = handleLike; 
     window.openComments = openComments;
     window.closeComments = closeComments;
