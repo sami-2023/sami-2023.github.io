@@ -312,8 +312,8 @@
         if (totalPointsEl) totalPointsEl.innerText = `${userPoints.toLocaleString()} Pts`;
         
                 if (cashValueEl) {
-            // 1000 points now equals 4000 Naira
-            const naira = (userPoints / 1000) * 4000;
+            // 2000 points now equals 4000 Naira
+            const naira = (userPoints / 2000) * 4000;
             cashValueEl.innerText = `≈ ₦${naira.toLocaleString()}`;
         }
        
@@ -324,7 +324,7 @@
         // Validation logic
         if (type === 'points') {
             if (userPoints < 1000) {
-                alert("You need at least 1,000 Points to withdraw.");
+                alert("You need at least 2,000 Points to withdraw.");
                 return;
             }
         } else {
@@ -364,15 +364,15 @@
                     modal.dataset.withdrawalType = type;
                 }
             }
-        }, 1000);
+        }, 2000);
     }
 
     // --- 4. WITHDRAWAL ACTIONS (AD-INTEGRATED) ---
     async function requestWithdrawal(type = 'referral') {
         // 1. Validation Logic
         if (type === 'points') {
-            if (userPoints < 1000) {
-                alert("You need at least 1,000 Points to withdraw.");
+            if (userPoints < 2000) {
+                alert("You need at least 2,000 Points to withdraw.");
                 return;
             }
         } else {
@@ -437,7 +437,7 @@
        let withdrawAmount;
 if (type === 'points') {
     // Convert points to Naira for the database record
-    withdrawAmount = (userPoints / 1000) * 4000;
+    withdrawAmount = (userPoints / 2000) * 4000;
 } else {
     // Referral earnings are already in Naira
     withdrawAmount = Math.floor(Number(currentEarnings));
