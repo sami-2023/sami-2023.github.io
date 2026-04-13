@@ -440,7 +440,9 @@
     // 4. Combine: User's newest post goes first, followed by the shuffled rest
     cachedPosts = latestUserPost ? [latestUserPost, ...otherPosts] : otherPosts;
 
-} catch (err) {
+} 
+
+catch (err) {
     console.error("Fetch error:", err);
 }
 
