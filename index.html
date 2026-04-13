@@ -605,7 +605,23 @@
         });
     }, { threshold: 0.3 });
 
-    
+    // 3. EXPOSE TO WINDOW (DO THIS BEFORE RUNNING INIT)
+    // We wrap these in a try/catch so if one is missing, the others still work.
+    try {
+        window.openComments = openComments;
+        window.closeComments = closeComments;
+        window.submitComment = submitComment;
+        window.handleLike = handleLike;
+        window.togglePostSound = togglePostSound;
+        window.toggleSettingsMenu = typeof toggleSettingsMenu !== 'undefined' ? toggleSettingsMenu : () => console.log('Menu not defined');
+        window.injectPartnerAd = injectPartnerAd;
+        window.loadFooterAd = loadFooterAd;
+    } catch (e) {
+        console.warn("Global scope exposure had an issue:", e);
+    }
+
+    // 4. START THE APP (Remove the 'await' here to prevent hanging)
+    init().catch(err => console.error("Init failed:", err));
 
     // 7. START
     init();
