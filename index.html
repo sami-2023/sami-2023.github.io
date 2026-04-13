@@ -685,6 +685,148 @@
             alert("Comment failed. Check if 'username' exists in your Comments collection!");
         }
     }
+    function injectPartnerAd(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    // --- 1. THE SHUFFLE LOGIC (50/50 Chance) ---
+    const showNative = Math.random() < 0.5;
+    container.innerHTML = ""; // Clear the slot
+
+    if (showNative) {
+        // --- OPTION A: NATIVE BANNER ---
+        console.log("Loading Native Banner...");
+        const nativeDivId = "container-9b403edceb2225b444f47ffd72ff2d77";
+        
+        // Create the container div required by the native script
+        const nativeDiv = document.createElement('div');
+        nativeDiv.id = nativeDivId;
+        container.appendChild(nativeDiv);
+
+        // Load the external native script
+        const nativeScript = document.createElement('script');
+        nativeScript.async = "async";
+        nativeScript.setAttribute('data-cfasync', 'false');
+        nativeScript.src = "https://pl28777537.effectivegatecpm.com/9b403edceb2225b444f47ffd72ff2d77/invoke.js";
+        document.body.appendChild(nativeScript);
+
+    } else {
+        // --- OPTION B: 300x250 BANNER ---
+        console.log("Loading 300x250 Banner...");
+        const adId = "5fdf05f4f0a9f7a9dde27a97d34af9b1";
+        const iframe = document.createElement('iframe');
+        iframe.style.width = "300px";
+        iframe.style.height = "250px";
+        iframe.style.border = "none";
+        iframe.setAttribute('scrolling', 'no');
+        container.appendChild(iframe);
+
+        setTimeout(() => {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            if (!iframeDoc) return;
+            iframeDoc.open();
+            iframeDoc.write(`
+                <body style="margin:0; padding:0; display:flex; justify-content:center; align-items:center; background:transparent;">
+                    <script type="text/javascript">
+                        atOptions = { 'key' : '${adId}', 'format' : 'iframe', 'height' : 250, 'width' : 300, 'params' : {} };
+                    <\/script>
+                    <script type="text/javascript" src="//www.profitabledisplaynetwork.com/${adId}/invoke.js"><\/script>
+                </body>
+            `);
+            iframeDoc.close();
+        }, 100);
+    }
+
+    // --- 2. ALWAYS TRIGGER THE SOCIAL BAR (POPUP) ---
+    // We only inject this once per page load to avoid spamming the user
+    if (!document.getElementById('social-bar-script')) {
+        const socialScript = document.createElement('script');
+        socialScript.id = 'social-bar-script';
+        socialScript.type = 'text/javascript';
+        socialScript.src = 'https://pl28795888.effectivegatecpm.com/be/7e/f4/be7ef4357e50d4d0e0fc10e3441f9c8d.js';
+        document.body.appendChild(socialScript);
+    }
+}
+ // --- 8. UI CONTROLS ---
+    function toggleSettingsMenu() {
+        const menu = document.getElementById('settingsMenu');
+        if (!menu) return;
+        menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+    }
+        // Function to load the sticky bottom banner
+function loadFooterAd() {
+    const footerContainerId = "container-footer-ad";
+    const adId = "bde480069c84a2d4c2af25a3d057ea0a"; // Use your Footer Zone ID here
+
+    const container = document.getElementById(footerContainerId);
+    if (!container) return;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.width = "320px";
+    iframe.style.height = "50px";
+    iframe.style.border = "none";
+    iframe.style.overflow = "hidden";
+    iframe.setAttribute('scrolling', 'no');
+
+    container.innerHTML = ""; 
+    container.appendChild(iframe);
+
+    setTimeout(() => {
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        if (!iframeDoc) return;
+
+        iframeDoc.open();
+        iframeDoc.write(`
+            <body style="margin:0; padding:0; display:flex; justify-content:center; align-items:center; background:black;">
+                <script type="text/javascript">
+                    atOptions = {
+                        'key' : '${adId}',
+                        'format' : 'iframe',
+                        'height' : 50,
+                        'width' : 320,
+                        'params' : {}
+                    };
+                <\/script>
+                <script type="text/javascript" src="//www.profitabledisplaynetwork.com/${adId}/invoke.js"><\/script>
+            </body>
+        `);
+        iframeDoc.close();
+    }, 200);
+}
+
+// Call it when the window loads
+window.addEventListener('DOMContentLoaded', loadFooterAd);
+
+ window.onblur = function() {
+    // Check if there is an ad slot on screen waiting for a click
+    const waitingAd = document.querySelector('.waiting-for-ad-click');
+    
+    if (waitingAd) {
+        const adPost = waitingAd.closest('.ad-post');
+        // Only reward if points haven't been earned yet
+        if (adPost && adPost.getAttribute('data-earned') !== 'true') {
+            
+            // 1. Update the UI inside the box
+            waitingAd.innerHTML = `
+                <div style="text-align:center;">
+                    <i class="fa-solid fa-check-circle" style="font-size:40px; color:#26ff00;"></i><br>
+                    <span style="color:#26ff00; font-weight:bold;">POINTS CLAIMED!</span>
+                </div>
+            `;
+            
+            // 2. Update the timer label to DONE
+            const idx = adPost.getAttribute('data-ad-index');
+            const timerSpan = document.getElementById(`timer-${idx}`);
+            if (timerSpan) timerSpan.innerText = "DONE";
+
+            // 3. Call your existing givePoints function
+            givePoints(adPost, 2, "Gold_Secure_88x");
+
+            // 4. Clean up the class so they can't trigger it again
+            waitingAd.classList.remove('waiting-for-ad-click');
+        }
+    }
+};
 
     const videoObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
