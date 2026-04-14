@@ -313,7 +313,7 @@
         
                 if (cashValueEl) {
             // 2000 points now equals 4000 Naira
-            const naira = (userPoints / 2000) * 4000;
+            const naira = (userPoints / 2000) * 2000;
             cashValueEl.innerText = `≈ ₦${naira.toLocaleString()}`;
         }
        
@@ -323,7 +323,7 @@
     async function requestWithdrawal(type = 'referral') {
         // Validation logic
         if (type === 'points') {
-            if (userPoints < 1000) {
+            if (userPoints < 2000) {
                 alert("You need at least 2,000 Points to withdraw.");
                 return;
             }
