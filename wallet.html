@@ -423,73 +423,81 @@
     }
 
     async function submitWithdrawal() {
-        const bank = document.getElementById('bankName').value;
-        const num = document.getElementById('accNumber').value;
-        const name = document.getElementById('accName').value;
-        const btn = document.getElementById('withdrawBtn');
-        
-        const modal = document.getElementById('withdrawModal');
-        const type = modal.dataset.withdrawalType;
+    // 1. Get input values (Note the variable names: bank, num, name)
+    const bank = document.getElementById('bankName').value;
+    const num = document.getElementById('accNumber').value;
+    const name = document.getElementById('accName').value;
+    const btn = document.getElementById('withdrawBtn');
+    
+    const modal = document.getElementById('withdrawModal');
+    const type = modal.dataset.withdrawalType;
 
-        if (!bank || !num || !name) {
-            alert("Please fill all bank details.");
-            return;
+    if (!bank || !num || !name) {
+        alert("Please fill all bank details.");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "Processing...";
+
+    try {
+        // 2. Fetch fresh profile data to ensure points are still there
+        const profile = await databases.getDocument(DB_ID, PROFILES_ID, currentUser.$id);
+        
+        // 3. Calculate withdrawal amount
+        let withdrawAmount;
+        if (type === 'points') {
+            withdrawAmount = 4000; // You are paying 4k for 2k points
+        } else {
+            withdrawAmount = Math.floor(Number(currentEarnings));
         }
-
-        btn.disabled = true;
-        btn.innerText = "Processing...";
-
-        // Ensure we are sending a clean Integer to Appwrite
-       let withdrawAmount;
-if (type === 'points') {
-    // Convert points to Naira for the database record
-    withdrawAmount = (userPoints / 2000) * 2000;
-} else {
-    // Referral earnings are already in Naira
-    withdrawAmount = Math.floor(Number(currentEarnings));
-}
         
+        // Prepare the point reset
         let updateData = (type === 'points') ? { points: 0 } : { referral_earnings: 0 };
 
-        try {
-            // 1. Create the request in Appwrite
-            // IMPORTANT: Ensure attributes 'username' and 'type' exist in your collection
-            await databases.createDocument(DB_ID, WITHDRAWALS_ID, 'unique()', {
-                user_id: currentUser.$id,
-                username: userProfile.username || 'User',
-                amount: withdrawAmount, 
-                bank_name: bank,
-                account_number: num,
-                account_name: name,
-                status: 'pending',
-                type: type, 
-                created_at: new Date().toISOString()
-            });
+        // 4. Create the request in Appwrite
+        await databases.createDocument(DB_ID, WITHDRAWALS_ID, 'unique()', {
+            user_id: currentUser.$id,
+            username: profile.username || 'User', // Use profile.username from fetched data
+            amount: withdrawAmount, 
+            bank_name: bank,
+            account_number: num,
+            account_name: name,
+            status: 'pending',
+            type: type, 
+            created_at: new Date().toISOString()
+        });
 
-            // 2. Reset the specific balance in the Profile
-            await databases.updateDocument(DB_ID, PROFILES_ID, currentUser.$id, updateData);
-
-            // 3. UI Cleanup
-            modal.style.display = 'none';
-            document.getElementById('successOverlay').style.display = 'flex';
-            // 4. Send Email via EmailJS
+        // 5. Send Email via EmailJS
+        // FIXED: Used 'bank', 'num', and 'name' to match the variables above
         const templateParams = {
             user_name: profile.username || currentUser.name || "User",
             user_id: currentUser.$id,
-            bank_name: bankName,
-            account_name: accName,
-            account_number: accNum
+            bank_name: bank,      // Fixed from bankName
+            account_name: name,   // Fixed from accName
+            account_number: num   // Fixed from accNum
         };
 
         await emailjs.send("service_l80jc6x", "template_fexg6fi", templateParams);
 
-        } catch (err) {
-            console.error("Submission Error:", err);
-            alert("Error: " + err.message);
-            btn.disabled = false;
-            btn.innerText = "SUBMIT REQUEST";
-        }
+        // 6. Reset the specific balance in the Profile
+        await databases.updateDocument(DB_ID, PROFILES_ID, currentUser.$id, updateData);
+
+        // 7. UI Cleanup
+        modal.style.display = 'none';
+        const successOverlay = document.getElementById('successOverlay');
+        if (successOverlay) successOverlay.style.display = 'flex';
+        
+        alert("Success! Your withdrawal is being processed.");
+        location.reload(); // Refresh to update the UI balance
+
+    } catch (err) {
+        console.error("Submission Error:", err);
+        alert("Error: " + err.message);
+        btn.disabled = false;
+        btn.innerText = "SUBMIT REQUEST";
     }
+}
 
     // --- 5. GLOBAL EXPOSURE ---
     // This makes the functions clickable from your HTML buttons
