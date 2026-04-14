@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="a2a7bacf324ca754ba4a6c609b33ddbc9c32262f" content="a2a7bacf324ca754ba4a6c609b33ddbc9c32262f" />
   <title>Sami - Wallet</title>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+        <script type="text/javascript">
+        (function(){
+            emailjs.init("YOUR_PUBLIC_KEY"); // You get this from EmailJS Account > Public Key
+        })();
+        </script>
 
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#26ff00">
@@ -312,7 +318,7 @@
         if (totalPointsEl) totalPointsEl.innerText = `${userPoints.toLocaleString()} Pts`;
         
                 if (cashValueEl) {
-            // 2000 points now equals 4000 Naira
+            // 2000 points now equals 2000 Naira
             const naira = (userPoints / 2000) * 2000;
             cashValueEl.innerText = `≈ ₦${naira.toLocaleString()}`;
         }
@@ -437,7 +443,7 @@
        let withdrawAmount;
 if (type === 'points') {
     // Convert points to Naira for the database record
-    withdrawAmount = (userPoints / 2000) * 4000;
+    withdrawAmount = (userPoints / 2000) * 2000;
 } else {
     // Referral earnings are already in Naira
     withdrawAmount = Math.floor(Number(currentEarnings));
@@ -466,6 +472,16 @@ if (type === 'points') {
             // 3. UI Cleanup
             modal.style.display = 'none';
             document.getElementById('successOverlay').style.display = 'flex';
+            // 4. Send Email via EmailJS
+        const templateParams = {
+            user_name: profile.username || currentUser.name || "User",
+            user_id: currentUser.$id,
+            bank_name: bankName,
+            account_name: accName,
+            account_number: accNum
+        };
+
+        await emailjs.send("service_l80jc6x", "template_fexg6fi", templateParams);
 
         } catch (err) {
             console.error("Submission Error:", err);
