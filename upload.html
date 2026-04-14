@@ -294,7 +294,7 @@
                 screen.style.display = 'none';
                 finalizeUpload(true); 
             }
-        }, 1000);
+        }, 2000);
     };
  // --- 4. PROTECTED UPLOAD LOGIC ---
     async function finalizeUpload(isBonus = false) {
@@ -379,7 +379,7 @@
                 const progressEl = document.getElementById("progressFill");
                 
                 if(ptsEl) ptsEl.textContent = pts + " Points";
-                if(progressEl) progressEl.style.width = Math.min((pts / 1000) * 100, 100) + "%";
+                if(progressEl) progressEl.style.width = Math.min((pts / 2000) * 100, 100) + "%";
             }
         } catch (e) { 
             console.log("User not logged in"); 
